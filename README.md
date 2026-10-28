@@ -9,7 +9,7 @@ last_updated: 2026-10-27
 Private prep site for the CFA Level I exam (May 2027 window), built from the official 2027 curriculum (10 volumes). It uses the same visual system as the [[Academia HQ/_archive/FIN 4453 Exam 2 Trainer (built for Hanh Duc)/README|FIN 4453 trainer]]: deck-style pages, an at-a-glance band, Learn / Practice / Rehearse boxes, and a source line on every question and stat.
 
 - **Live (private):** https://claude.ai/artifact/5UMxHRs6Pwi2Tqkj6c2c3h. Progress syncs to Duc's account. Republish to the same URL so progress carries over.
-- **Repo (private):** `w-ducdoan/cfa-l1-trainer`. GitHub Pages stays off: the curriculum is "for candidate use only, not for distribution", and Pages sites are public.
+- **Repo (public) and public site:** `w-ducdoan/cfa-l1-trainer`; every push to `main` deploys `dist/` to https://w-ducdoan.github.io/cfa-l1-trainer/ (`.github/workflows/deploy.yml`). Duc chose this on 2026-10-28 knowing the curriculum is marked "for candidate use only, not for distribution". On the Pages site Ask Claude is hidden and progress stays in the browser.
 - **Offline:** open `dist/index.html` in a browser. Progress saves in that browser only.
 
 ## What is in it
