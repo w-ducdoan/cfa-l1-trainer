@@ -209,6 +209,29 @@ code{font-family:var(--mono);font-size:.86em;background:var(--surface2);padding:
 .check{margin:14px 0 18px;max-width:74ch}.check>p{margin:0 0 8px}
 button.mt:disabled{cursor:default;color:var(--muted)}
 
+/* analytics: HTML bar rows (label | track with optional reference line | value) */
+.hbars{display:grid;gap:2px;margin:10px 0}
+.hb{display:grid;grid-template-columns:minmax(120px,240px) minmax(0,1fr) 92px;gap:12px;align-items:center;padding:5px 0;font-size:.9rem}
+.hl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+.ht{position:relative;height:12px;background:var(--surface2)}
+.ht i{position:absolute;left:0;top:0;bottom:0;background:var(--navy);border-radius:0 4px 4px 0}
+.ht b{position:absolute;top:-3px;bottom:-3px;width:0;border-left:2px dashed var(--orange)}
+.hv{text-align:right;font-weight:600;color:var(--ink);white-space:nowrap}
+.hbkey{padding-top:0}
+.weeks{display:flex;gap:6px;align-items:flex-end;height:120px;margin:10px 0}
+.weeks div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%}
+.weeks span{width:100%;max-width:34px;background:var(--steel);border-radius:4px 4px 0 0;min-height:2px}
+.weeks small{font-size:.66rem;color:var(--muted);white-space:nowrap}
+svg.chart{width:100%;height:auto;display:block}
+.chart .grid{stroke:var(--line)}
+.chart .tick{fill:var(--muted);font:12px var(--sans)}
+.chart .anno{fill:var(--ink);font:12px var(--sans)}
+.chart .mark{stroke:var(--orange);stroke-width:1.5;stroke-dasharray:5 4}
+.chart .p1{fill:none;stroke:var(--navy);stroke-width:2}
+.chart .d1{fill:var(--navy);stroke:var(--surface);stroke-width:2}
+.chart .dx{fill:var(--orange);stroke:var(--surface);stroke-width:2}
+.exambar .pausebtn{background:transparent;color:inherit;border-color:currentColor}
+
 /* questions */
 .qwrap{display:grid;gap:18px}
 .qwrap.split{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
@@ -277,5 +300,7 @@ details.rv summary::-webkit-details-marker{display:none}
   .qwrap.split{grid-template-columns:1fr}.vign{position:static;max-height:52vh;border-bottom:1px solid var(--line)}
   .src{max-width:100%}
   dl.terms{grid-template-columns:1fr}dl.terms dt{border-bottom:0;padding-bottom:0}
+  .hb{grid-template-columns:minmax(0,1fr) 84px;gap:4px 10px}.hb .ht{grid-column:1/-1;grid-row:2}
+  .hbkey{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

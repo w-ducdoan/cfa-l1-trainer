@@ -6,7 +6,8 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const DAY = 864e5, PASS = 0.7, PACE = 90, HOURS = 300, NAME = 'Duc';
   const DEFAULT_EXAM = '2027-05-17';
-  const LS_KEY = 'cfa-l1-trainer-v1';
+  const LS_KEY = 'cfa-l1-trainer-v1', LS_MOCK = 'cfa-l1-mock-run';
+  const lsDel = k => { try { localStorage.removeItem(k); } catch (e) { /* storage unavailable */ } };
   const lsGet = k => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } };
 
@@ -24,11 +25,13 @@
 
   // ---------- progress ----------
   // cards[qid] = { due, ivl, ease, reps, lapses, last, ok, conf, h: [[t, ok, conf, secs]] }
-  const blank = () => ({ v: 2, updated: 0, cards: {}, notes: {}, daily: {}, los: {}, quizzes: {}, lessons: {}, xp: 0, settings: { exam: '', newPerDay: 15, planStart: '' } });
+  const blank = () => ({ v: 2, updated: 0, cards: {}, notes: {}, daily: {}, los: {}, quizzes: {}, lessons: {}, tests: {}, mocks: [], xp: 0, settings: { exam: '', newPerDay: 15, planStart: '' } });
   const S = { view: 'home', prog: Object.assign(blank(), lsGet(LS_KEY) || {}), sync: 'local', refs: null, run: null, result: null, mod: null, sel: null, nb: { topic: '', tag: '' } };
   S.prog.settings = Object.assign(blank().settings, S.prog.settings);
   if (!S.prog.quizzes) S.prog.quizzes = {};
   if (!S.prog.lessons) S.prog.lessons = {};
+  if (!S.prog.tests) S.prog.tests = {};
+  if (!S.prog.mocks) S.prog.mocks = [];
   const LES = B.lessons || {};
   const hasLesson = mid => !!LES[mid];
   if (!S.prog.settings.planStart) { S.prog.settings.planStart = dayKey(); lsSet(LS_KEY, S.prog); }
@@ -51,6 +54,11 @@
       out.quizzes[k] = [...seen.values()].sort((x, y) => x.t - y.t).slice(-12);
     }
     for (const src of [a.lessons || {}, b.lessons || {}]) for (const [k, l] of Object.entries(src)) if (!out.lessons[k] || (l.ok || 0) > (out.lessons[k].ok || 0) || ((l.ok || 0) === (out.lessons[k].ok || 0) && l.t > out.lessons[k].t)) out.lessons[k] = l;
+    for (const src of [a.tests || {}, b.tests || {}]) for (const [k, list] of Object.entries(src)) {
+      const seen = new Map((out.tests[k] || []).map(x => [x.t, x])); list.forEach(x => seen.set(x.t, x));
+      out.tests[k] = [...seen.values()].sort((x, y) => x.t - y.t).slice(-12);
+    }
+    { const seen = new Map(); [...(a.mocks || []), ...(b.mocks || [])].forEach(x => seen.set(x.t, x)); out.mocks = [...seen.values()].sort((x, y) => x.t - y.t).slice(-20); }
     out.xp = Math.max(a.xp || 0, b.xp || 0);
     out.updated = Math.max(a.updated || 0, b.updated || 0);
     return out;
@@ -74,7 +82,7 @@
     try {
       const todo = [...dirty]; dirty.clear();
       for (const t of todo) {
-        if (t === '_meta') await S.refs.meta.set({ settings: S.prog.settings, daily: S.prog.daily, notes: S.prog.notes, los: S.prog.los, quizzes: S.prog.quizzes, lessons: S.prog.lessons, xp: S.prog.xp, updated: S.prog.updated });
+        if (t === '_meta') await S.refs.meta.set({ settings: S.prog.settings, daily: S.prog.daily, notes: S.prog.notes, los: S.prog.los, quizzes: S.prog.quizzes, lessons: S.prog.lessons, tests: S.prog.tests, mocks: S.prog.mocks, xp: S.prog.xp, updated: S.prog.updated });
         else await S.refs.col.doc('cards-' + t).set({ cards: cardsOf(t) });
       }
       setSync('synced');
@@ -94,7 +102,7 @@
       const refs = { col, meta: col.doc('meta') };
       const remote = blank();
       const m = await refs.meta.get();
-      if (m.exists && m.data()) { const d = m.data(); Object.assign(remote, { settings: d.settings || remote.settings, daily: d.daily || {}, notes: d.notes || {}, los: d.los || {}, quizzes: d.quizzes || {}, lessons: d.lessons || {}, xp: d.xp || 0, updated: d.updated || 0 }); }
+      if (m.exists && m.data()) { const d = m.data(); Object.assign(remote, { settings: d.settings || remote.settings, daily: d.daily || {}, notes: d.notes || {}, los: d.los || {}, quizzes: d.quizzes || {}, lessons: d.lessons || {}, tests: d.tests || {}, mocks: d.mocks || [], xp: d.xp || 0, updated: d.updated || 0 }); }
       for (const t of B.topics) {
         const d = await col.doc('cards-' + t.id).get();
         if (d.exists && d.data() && d.data().cards) Object.assign(remote.cards, d.data().cards);
@@ -236,7 +244,9 @@
     if (o.mode === 'exam') ids = ids.filter(id => Q.get(id).opts);
     if (!ids.length) { toast('Nothing to practice here yet'); return; }
     ids = o.keep ? ids : orderGroups(ids, o.kind === 'quiz');
-    S.run = { kind: o.kind || 'drill', mode: o.mode || 'practice', mid: o.mid || null, label, ids, i: 0, ans: {}, flags: {}, t0: Date.now(), qt: Date.now(), revealed: false, requeued: {}, deadline: o.mode === 'exam' ? Date.now() + ids.length * PACE * 1000 : 0, xp0: S.prog.xp || 0, prior: {} };
+    S.run = { kind: o.kind || 'drill', mode: o.mode || 'practice', mid: o.mid || null, tid: o.tid || null, mix: o.mix || null, label, ids, i: 0, ans: {}, flags: {}, t0: Date.now(), qt: Date.now(), revealed: false, requeued: {}, xp0: S.prog.xp || 0, prior: {},
+      bounds: o.bounds || [0, ids.length], session: 0, sessionSecs: o.sessionSecs || ids.length * PACE, deadline: 0 };
+    if (S.run.mode === 'exam') S.run.deadline = Date.now() + S.run.sessionSecs * 1000;
     ids.forEach(id => { S.run.prior[id] = S.prog.cards[id] ? S.prog.cards[id].ok : null; });
     S.result = null; setView('run');
   }
@@ -252,8 +262,13 @@
     const R = S.run;
     if (R.mode === 'exam') R.ids.forEach(id => { const a = R.ans[id]; const q = Q.get(id); const ok = !!a && a.pick === q.ans; R.ans[id] = Object.assign({ pick: null, secs: 0 }, a, { ok }); grade(id, ok, a && a.pick != null ? 1 : 2, (a && a.secs) || 0); });
     const items = R.ids.filter((id, k) => R.ids.indexOf(id) === k && R.ans[id] && R.ans[id].ok != null).map(id => ({ id, ok: R.ans[id].ok, pick: R.ans[id].pick, secs: R.ans[id].secs || 0 }));
-    const n = items.length, ok = items.filter(x => x.ok).length, secs = (Date.now() - R.t0) / 1000;
+    const n = items.length, ok = items.filter(x => x.ok).length;
+    const secs = R.mode === 'exam' ? items.reduce((a, x) => a + x.secs, 0) : (Date.now() - R.t0) / 1000;
     let bonus = 0;
+    const byTopic = {};
+    items.forEach(x => { const t = MOD.get(Q.get(x.id).m).topic; const o = byTopic[t] = byTopic[t] || [0, 0]; o[0] += x.ok ? 1 : 0; o[1]++; });
+    if (R.kind === 'test' && n) { S.prog.tests[R.tid] = (S.prog.tests[R.tid] || []).concat([{ t: Date.now(), n, ok, secs: Math.round(secs) }]).slice(-12); bonus = 40; S.prog.xp += bonus; save(); }
+    if (R.kind === 'mock' && n) { S.prog.mocks = S.prog.mocks.concat([{ t: Date.now(), n, ok, secs: Math.round(secs), byTopic, mix: R.mix }]).slice(-20); bonus = 100; S.prog.xp += bonus; save(); lsDel(LS_MOCK); }
     if (R.kind === 'quiz' && n) {
       const m = MOD.get(R.mid), wasPassed = modStats(m).passed;
       const list = S.prog.quizzes[R.mid] = (S.prog.quizzes[R.mid] || []).concat([{ t: Date.now(), n, ok, secs: Math.round(secs), mode: R.mode }]).slice(-12);
@@ -261,12 +276,194 @@
       S.prog.xp += bonus; save();
       void list;
     }
-    S.result = { label: R.label, kind: R.kind, mode: R.mode, mid: R.mid, items, n, ok, secs, xp: (S.prog.xp || 0) - R.xp0, bonus };
+    S.result = { label: R.label, kind: R.kind, mode: R.mode, mid: R.mid, tid: R.tid, items, n, ok, secs, byTopic, xp: (S.prog.xp || 0) - R.xp0, bonus };
     S.run = null; setView('results');
   }
 
+  // ---------- exams: topic tests and full mocks ----------
+  // Mocks follow the Level I format: 180 standalone three-option questions in two sessions of 90, 2h15 each.
+  const MOCK_N = 180, SESSION_N = 90, SESSION_SECS = 135 * 60, TEST_N = 30, MOCK_TARGET = 0.7;
+  const segA = R => R.bounds[R.session], segB = R => R.bounds[R.session + 1];
+  // Three-option questions with a key. The exam itself is all standalone questions, so those come first;
+  // item-set questions (shown with their case) fill topics such as Derivatives where most questions sit in sets.
+  const examQ = q => q.opts && q.opts.length === 3 && q.ans != null;
+  const topicPool = tid => TOP.get(tid).modules.flatMap(id => MOD.get(id).all).map(id => Q.get(id)).filter(examQ);
+  function allocate(total) {
+    // largest-remainder split of the questions by exam weight
+    const W = B.topics.reduce((a, t) => a + t.w, 0);
+    const rows = B.topics.map(t => { const x = total * t.w / W; return { id: t.id, x, n: Math.floor(x) }; });
+    let left = total - rows.reduce((a, r) => a + r.n, 0);
+    [...rows].sort((a, b) => (b.x - b.n) - (a.x - a.n)).slice(0, left).forEach(r => r.n++);
+    return Object.fromEntries(rows.map(r => [r.id, r.n]));
+  }
+  // Mock questions: held-back (reserve) questions first, then never-answered ones, then the longest-unseen.
+  function buildMock() {
+    const alloc = allocate(MOCK_N), card = q => S.prog.cards[q.id], queues = {}, counts = {};
+    for (const t of B.topics) {
+      const all = topicPool(t.id), pool = all.filter(q => !q.set), sets = all.filter(q => q.set);
+      const held = shuffle(pool.filter(q => q.res && !card(q))), fresh = shuffle(pool.filter(q => !q.res && !card(q)));
+      const seen = pool.filter(card).sort((a, b) => card(a).last - card(b).last);
+      const setQs = [...shuffle(sets.filter(q => !card(q))), ...sets.filter(card).sort((a, b) => card(a).last - card(b).last)];
+      queues[t.id] = [...held, ...fresh, ...seen, ...setQs];
+      counts[t.id] = Math.min(alloc[t.id], queues[t.id].length);
+    }
+    // Some topics have too few standalone questions for their share; give the shortfall to topics with
+    // spare questions, one at a time in order of exam weight.
+    let short = MOCK_N - Object.values(counts).reduce((a, n) => a + n, 0);
+    const byWeight = [...B.topics].sort((a, b) => b.w - a.w);
+    while (short > 0 && byWeight.some(t => counts[t.id] < queues[t.id].length)) {
+      for (const t of byWeight) if (short > 0 && counts[t.id] < queues[t.id].length) { counts[t.id]++; short--; }
+    }
+    const ids = [], mix = { held: 0, fresh: 0, repeat: 0 };
+    for (const t of B.topics) queues[t.id].slice(0, counts[t.id]).forEach(q => { ids.push(q.id); if (card(q)) mix.repeat++; else if (q.res) mix.held++; else mix.fresh++; });
+    return { ids: shuffle(ids), mix, counts };
+  }
+  // Topic tests: spread across the topic's modules, unseen and weak questions first; never uses the mock reserve.
+  function buildTest(tid) {
+    const groups = TOP.get(tid).modules.map(id => MOD.get(id)).map(m => {
+      const rank = q => { const c = S.prog.cards[q.id]; return !c ? 0 : !c.ok ? 1 : 2 + Math.random(); };
+      return shuffle(m.all.map(id => Q.get(id)).filter(q => examQ(q) && inPractice(q.id))).sort((a, b) => rank(a) - rank(b));
+    }).filter(g => g.length);
+    const out = [];
+    for (let k = 0; out.length < TEST_N && groups.some(g => g.length > k); k++) shuffle(groups.slice()).forEach(g => { if (g[k] && out.length < TEST_N) out.push(g[k].id); });
+    return shuffle(out);
+  }
+  function startTest(tid) {
+    const ids = buildTest(tid), t = TOP.get(tid);
+    if (ids.length < 5) { toast('Not enough questions for a test yet'); return; }
+    startRun(ids, `Topic test · ${t.name}`, { kind: 'test', mode: 'exam', tid, keep: true, sessionSecs: ids.length * PACE });
+  }
+  function startMock() {
+    if (lsGet(LS_MOCK)) { toast('Finish or discard the saved mock first'); return; }
+    const { ids, mix } = buildMock();
+    const bounds = [0, Math.min(SESSION_N, ids.length), ids.length];
+    startRun(ids, `Full mock ${S.prog.mocks.length + 1}`, { kind: 'mock', mode: 'exam', keep: true, bounds, sessionSecs: SESSION_SECS, mix });
+  }
+  // Ending a session either moves a mock to its break or finishes the run.
+  function endSession() {
+    const R = S.run;
+    if (R.session < R.bounds.length - 2) {
+      const id = R.ids[R.i], a = R.ans[id] = R.ans[id] || { pick: null }; a.secs = (a.secs || 0) + (Date.now() - R.qt) / 1000;
+      R.session++; R.i = segA(R); R.onBreak = true; R.deadline = 0; R.confirmSubmit = null;
+      render(); window.scrollTo(0, 0); return;
+    }
+    finishRun();
+  }
+  function pauseMock(go) {
+    const R = S.run; if (!R || R.kind !== 'mock') return;
+    if (R.deadline) R.pausedLeft = Math.max(0, R.deadline - Date.now());
+    const id = R.ids[R.i], a = R.ans[id] = R.ans[id] || { pick: null }; a.secs = (a.secs || 0) + (Date.now() - R.qt) / 1000;
+    R.deadline = 0; lsSet(LS_MOCK, R); S.run = null;
+    toast('Mock paused and saved on this device');
+    if (go) setView('exams');
+  }
+  function resumeMock() {
+    const R = lsGet(LS_MOCK); if (!R) { toast('No saved mock'); return; }
+    R.qt = Date.now();
+    // paused: use the time left at pause; closed without pausing: the time left when last seen
+    if (R.pausedLeft == null && R.deadline) R.pausedLeft = Math.max(0, R.deadline - (R.lastSeen || Date.now()));
+    if (!R.onBreak) R.deadline = Date.now() + (R.pausedLeft != null ? R.pausedLeft : R.sessionSecs * 1000);
+    delete R.pausedLeft;
+    S.run = R; S.result = null; setView('run');
+  }
+  function vBreak() {
+    const R = S.run, done = R.ids.slice(0, segA(R)).filter(x => R.ans[x] && R.ans[x].pick != null).length;
+    return `<section class="page"><div class="lbl">${esc(R.label)}</div><h2>Session ${R.session} submitted</h2>
+      <p class="sub">${done} of ${segA(R)} answered. Take a break before session ${R.session + 1}: stand up, drink some water, eat something light. The real exam offers an optional break between sessions.</p>
+      <div class="qfoot"><button class="btn big" data-act="start-session">Start session ${R.session + 1} · ${segB(R) - segA(R)} questions · ${fmtSecs(R.sessionSecs)}</button><button class="btn ghost" data-act="pause">Save and finish later</button></div>
+      <p class="src">The timer for session ${R.session + 1} starts when you press the button. Your session ${R.session} answers are locked and won't be shown until the end.</p></section>`;
+  }
+
+  function vExams() {
+    const saved = lsGet(LS_MOCK), preview = buildMock(), alloc = allocate(MOCK_N);
+    const mocks = S.prog.mocks;
+    const savedLine = saved ? (() => { const ans = Object.values(saved.ans || {}).filter(x => x.pick != null).length; const left = saved.onBreak ? 'on the break' : fmtSecs((saved.pausedLeft != null ? saved.pausedLeft : Math.max(0, (saved.deadline || 0) - Date.now())) / 1000) + ' left'; return `${esc(saved.label)}: session ${saved.session + 1} of ${saved.bounds.length - 1}, ${ans} of ${saved.ids.length} answered, ${left}`; })() : '';
+    return `<section class="page"><h2>Full mock exams</h2><p class="sub">180 questions in two timed sessions of 90, 2h15 each, weighted like the real exam. Pause any time; your place and the clock are saved on this device.</p>
+      ${saved ? `<div class="status no"><b>Mock in progress.</b> ${savedLine}.</div><div class="qfoot"><button class="btn big" data-act="resume-mock">Resume</button><button class="btn ghost" data-act="discard-mock">Discard</button></div>`
+        : `<div class="glance"><div class="glh">Next mock: ${preview.ids.length} questions</div><div class="glrow" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+          <div><b>${preview.mix.held}</b><span>Held back for mocks, never practiced</span></div><div><b>${preview.mix.fresh}</b><span>Never answered yet</span></div><div><b>${preview.mix.repeat}</b><span>Repeats (longest-unseen first)</span></div></div></div>
+          <div class="qfoot"><button class="btn big" data-act="mock">Start mock ${mocks.length + 1}</button><span class="small muted">Plan for about 5 hours including the break.</span></div>`}
+      <h3 class="sh">Questions per topic</h3>
+      <div class="tw"><table class="fin"><thead><tr><th>Topic</th><th>Exam weight</th><th>Target</th><th>In the next mock</th></tr></thead><tbody>${B.topics.map(t => `<tr><td>${esc(t.name)}</td><td class="n">${t.w}%</td><td class="n">${alloc[t.id]}</td><td class="n">${preview.counts[t.id]}</td></tr>`).join('')}</tbody></table></div>
+      <p class="small muted">Standalone questions come first, as on the real exam. Where a topic runs short (most Derivatives questions sit in case-based item sets), its item-set questions fill in, shown with their case; any remaining shortfall goes to the highest-weight topics with questions to spare.</p>
+      ${mocks.length ? `<h3 class="sh">Your mocks</h3><ul class="list">${mocks.slice().reverse().map((m, k) => `<li><span class="chip ${m.ok / m.n >= MOCK_TARGET ? 'good' : 'mid'}">${pct(m.ok / m.n)}</span><span class="grow">Mock ${mocks.length - k} · ${m.ok} of ${m.n} · ${fmtSecs(m.secs)} answering${m.mix ? ` · ${m.mix.held} held-back, ${m.mix.fresh} new, ${m.mix.repeat} repeats` : ''}</span><span class="small muted">${fmtDate(m.t)}</span></li>`).join('')}</ul>` : ''}
+      <p class="src">Source: end-of-module practice problems from the CFA Program Curriculum 2027, Level I, standalone multiple-choice only. CFA Institute doesn't publish a passing score; a common rule of thumb is to aim for 70% or better on practice mocks. The official CFA Institute mocks in your Learning Ecosystem account remain the best final check.</p></section>
+    <section class="page"><h2>Topic tests</h2><p class="sub">Up to 30 questions from one topic, spread across its modules, unseen and weak questions first. Timed at 1:30 a question.</p>
+      ${B.topics.map(t => { const list = S.prog.tests[t.id] || [], best = list.length ? Math.max(...list.map(x => x.ok / x.n)) : null, last = list[list.length - 1], n = Math.min(TEST_N, topicPool(t.id).filter(q => inPractice(q.id)).length);
+        return `<div class="qlrow" style="grid-template-columns:minmax(0,1fr) 70px 120px auto"><span class="mt" style="cursor:default">${esc(t.name)}<small>${t.w}% of the exam · ${n} questions · ${fmtSecs(n * PACE)}</small></span>
+          <span class="sc ${best == null ? 'lv-new' : best >= MOCK_TARGET ? 'lv-solid' : 'lv-weak'}">${best == null ? '–' : pct(best)}</span>
+          <span class="small muted st">${last ? `last ${pct(last.ok / last.n)} · ${fmtDate(last.t)}` : 'not taken'}</span>
+          <span class="acts"><button class="btn sm" data-act="test" data-id="${t.id}" ${n < 5 ? 'disabled' : ''}>Start test</button></span></div>`; }).join('')}
+      <p class="src">Topic tests never use the questions held back for mocks.</p></section>`;
+  }
+
+  // ---------- analytics ----------
+  function hbars(rows, o = {}) {
+    // horizontal bars as HTML: label | track (with optional reference line) | value text
+    const max = o.max || Math.max(1e-9, ...rows.map(r => r.v));
+    return `<div class="hbars">${rows.map(r => `<div class="hb" title="${esc(r.title || '')}"><span class="hl">${esc(r.label)}</span><span class="ht">${r.v == null ? '' : `<i style="width:${Math.min(100, r.v / max * 100)}%"></i>`}${o.ref != null ? `<b style="left:${Math.min(100, o.ref / max * 100)}%"></b>` : ''}</span><span class="hv">${r.text}</span></div>`).join('')}
+      ${o.ref != null ? `<div class="hb hbkey"><span></span><span class="small muted">${esc(o.refLabel)}</span><span></span></div>` : ''}</div>`;
+  }
+  function scoreLine(pts) {
+    // one series: timed scores over time, with a dashed 70% reference
+    const W = 640, H = 230, L = 44, Rr = 16, T = 14, Bm = 34, n = pts.length;
+    const x = i => n === 1 ? (L + W - Rr) / 2 : L + i * (W - L - Rr) / (n - 1), y = v => T + (1 - v) * (H - T - Bm);
+    const ticks = [0, 0.25, 0.5, 0.75, 1];
+    let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Timed scores over time">`;
+    ticks.forEach(v => { s += `<line class="grid" x1="${L}" x2="${W - Rr}" y1="${y(v)}" y2="${y(v)}"/><text class="tick" x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v * 100}%</text>`; });
+    s += `<line class="mark" x1="${L}" x2="${W - Rr}" y1="${y(MOCK_TARGET)}" y2="${y(MOCK_TARGET)}"/><text class="anno" x="${W - Rr}" y="${y(MOCK_TARGET) - 6}" text-anchor="end">70% rule of thumb</text>`;
+    if (n > 1) s += `<polyline class="p1" points="${pts.map((p, i) => `${x(i)},${y(p.v)}`).join(' ')}"/>`;
+    pts.forEach((p, i) => { s += `<circle class="${p.kind === 'mock' ? 'dx' : 'd1'}" cx="${x(i)}" cy="${y(p.v)}" r="${p.kind === 'mock' ? 6 : 4.5}"><title>${esc(p.label)}: ${pct(p.v)} on ${fmtDate(p.t)}</title></circle>`; });
+    const step = Math.max(1, Math.ceil(n / 8));
+    pts.forEach((p, i) => { if (i % step === 0 || i === n - 1) s += `<text class="tick" x="${x(i)}" y="${H - 12}" text-anchor="middle">${fmtDate(p.t)}</text>`; });
+    return s + '</svg>';
+  }
+  function vAnalytics() {
+    const hist = Object.entries(S.prog.cards).filter(([id]) => Q.has(id)).flatMap(([id, c]) => (c.h || []).map(h => ({ id, t: h[0], ok: h[1], conf: h[2], secs: h[3], topic: topicOfQ(id) })));
+    const byTopic = B.topics.map(t => { const xs = hist.filter(h => h.topic === t.id), last = Object.entries(S.prog.cards).filter(([id]) => Q.has(id) && topicOfQ(id) === t.id);
+      return { t, n: xs.length, acc: last.length ? last.filter(([, c]) => c.ok).length / last.length : null, cards: last.length, pace: xs.filter(h => h.secs > 0).length ? xs.filter(h => h.secs > 0).reduce((a, h) => a + Math.min(h.secs, 600), 0) / xs.filter(h => h.secs > 0).length : null }; });
+    const conf = [0, 1, 2].map(k => { const xs = hist.filter(h => h.conf === k); return { k, n: xs.length, acc: xs.length ? xs.filter(h => h.ok).length / xs.length : null }; });
+    const tags = { concept: 0, calc: 0, misread: 0 }; Object.values(S.prog.notes).forEach(n => { if (tags[n.tag] != null) tags[n.tag]++; });
+    const timed = [
+      ...Object.entries(S.prog.quizzes).flatMap(([mid, l]) => l.filter(x => x.mode === 'exam').map(x => ({ t: x.t, v: x.ok / x.n, kind: 'quiz', label: `Timed quiz LM ${MOD.get(mid) ? MOD.get(mid).num : ''}` }))),
+      ...Object.entries(S.prog.tests).flatMap(([tid, l]) => l.map(x => ({ t: x.t, v: x.ok / x.n, kind: 'test', label: `Topic test ${TOP.get(tid).name}` }))),
+      ...S.prog.mocks.map((x, i) => ({ t: x.t, v: x.ok / x.n, kind: 'mock', label: `Mock ${i + 1}` }))
+    ].sort((a, b) => a.t - b.t).slice(-30);
+    // projected score: latest mock if any, else exam-weighted accuracy over topics with 10+ answered questions
+    const lastMock = S.prog.mocks[S.prog.mocks.length - 1];
+    let proj = null;
+    if (lastMock) { const p = lastMock.ok / lastMock.n; proj = { p, se: Math.sqrt(p * (1 - p) / lastMock.n), basis: `your latest mock (${fmtDate(lastMock.t)})` }; }
+    else { const used = byTopic.filter(x => x.cards >= 10); if (used.length) { const W = used.reduce((a, x) => a + x.t.w, 0), p = used.reduce((a, x) => a + x.t.w * x.acc, 0) / W, n = used.reduce((a, x) => a + x.cards, 0); proj = { p, se: Math.sqrt(p * (1 - p) / n), basis: `exam-weighted accuracy in ${used.length} of 10 topics (10+ questions answered each)` }; } }
+    const weeks = [...Array(8)].map((_, i) => { const end = today0() - (7 - i) * 7 * DAY + 7 * DAY; let secs = 0, n = 0; for (let d = 0; d < 7; d++) { const x = S.prog.daily[dayKey(end - (7 - d) * DAY)]; if (x) { secs += x.secs; n += x.n; } } return { t: end - 7 * DAY, min: Math.round(secs / 60), n }; });
+    const allPace = hist.filter(h => h.secs > 0), pace = allPace.length ? allPace.reduce((a, h) => a + Math.min(h.secs, 600), 0) / allPace.length : null;
+    const wmax = Math.max(60, ...weeks.map(w => w.min));
+    return `<section class="page"><h2>Analytics</h2><p class="sub">Where your score stands, where the points are, and how you work.</p>
+      <div class="glance"><div class="glh">At a glance</div><div class="glrow">
+        <div><b>${proj ? pct(proj.p) : '–'}</b><span>${proj ? `Projected score, range ${pct(Math.max(0, proj.p - 1.96 * proj.se))}–${pct(Math.min(1, proj.p + 1.96 * proj.se))}` : 'Projected score: answer 10+ questions in a topic, or take a mock'}</span></div>
+        <div><b>${comma(hist.length)}</b><span>Answers logged</span></div>
+        <div><b>${pace == null ? '–' : fmtSecs(pace)}</b><span>Average time a question (target 1:30)</span></div>
+        <div><b>${conf[0].acc == null ? '–' : pct(conf[0].acc)}</b><span>Right when you were sure</span></div>
+        <div><b>${Math.round(weeks.slice(-4).reduce((a, w) => a + w.min, 0) / 60 * 10) / 10}</b><span>Hours practiced, last 4 weeks</span></div></div></div>
+      <p class="src">${proj ? `Projection basis: ${proj.basis}. The range is a 95% interval from sample size alone; real exam questions differ, so treat it as a rough guide.` : 'The projection needs either a mock or at least 10 answered questions in a topic.'}</p></section>
+    <section class="page"><h2>Accuracy by topic</h2><p class="sub">Share right on the latest attempt of each question, topics in order of exam weight</p>
+      ${hbars([...byTopic].sort((a, b) => b.t.w - a.t.w).map(x => ({ label: `${x.t.name} (${x.t.w}%)`, v: x.acc, text: x.acc == null ? 'no data' : `${pct(x.acc)} · ${x.cards}`, title: `${x.t.name}: ${x.acc == null ? 'no answers yet' : pct(x.acc) + ' right on ' + x.cards + ' questions'}` })), { max: 1, ref: MOCK_TARGET, refLabel: 'Line: 70% rule-of-thumb target' })}
+      <p class="src">Number after the percentage: questions answered at least once.</p></section>
+    <section class="page"><div class="two">
+      <div><h2>Pace by topic</h2>${hbars(byTopic.map(x => ({ label: x.t.name, v: x.pace, text: x.pace == null ? 'no data' : fmtSecs(x.pace), title: `${x.t.name}: ${x.pace == null ? 'no timed answers' : fmtSecs(x.pace) + ' a question'}` })), { max: Math.max(180, ...byTopic.map(x => x.pace || 0)), ref: PACE, refLabel: 'Line: exam pace of 1:30' })}</div>
+      <div><h2>Confidence check</h2><p class="small muted">How often you're right, by how sure you said you were</p>
+        ${hbars(conf.map(c => ({ label: ['Sure', 'Unsure', 'Guess'][c.k], v: c.acc, text: c.acc == null ? 'no data' : `${pct(c.acc)} · ${c.n}`, title: `${['Sure', 'Unsure', 'Guess'][c.k]}: ${c.n} answers` })), { max: 1 })}
+        <p class="small">${conf[0].n >= 20 && conf[0].acc < 0.85 ? `<b>Overconfidence flag:</b> you're right ${pct(conf[0].acc)} of the time when sure. Slow down on questions that feel easy.` : conf[0].n >= 20 ? 'Your "sure" answers are reliable.' : 'Needs 20+ "sure" answers to judge.'} Timed exams log answers as unsure.</p></div></div></section>
+    <section class="page"><h2>Timed scores</h2><p class="sub">Timed module quizzes, topic tests and mocks (larger orange dots)</p>
+      ${timed.length ? scoreLine(timed) : '<p class="empty">No timed results yet. Take a timed quiz, a topic test or a mock.</p>'}</section>
+    <section class="page"><div class="two">
+      <div><h2>Why you miss</h2>${hbars([['concept', 'Concept gaps'], ['calc', 'Calculation slips'], ['misread', 'Misreads']].map(([k, l]) => ({ label: l, v: tags[k], text: String(tags[k]) })), { max: Math.max(1, ...Object.values(tags)) })}
+        <p class="small muted">From the reasons you tag on missed questions.</p></div>
+      <div><h2>Practice time</h2><div class="weeks">${weeks.map(w => `<div title="Week of ${fmtDate(w.t)}: ${w.min} min, ${w.n} questions"><span style="height:${Math.round(w.min / wmax * 90)}px"></span><small>${fmtDate(w.t)}</small></div>`).join('')}</div>
+        <p class="small muted">Minutes a week from timed answers, last 8 weeks.</p></div></div></section>`;
+  }
+
   // ---------- views ----------
-  const TABS = { home: 'Home', plan: 'Study plan', lessons: 'Lessons', map: 'Mastery map', quizzes: 'Module quizzes', review: 'Daily review', notebook: 'Error notebook' };
+  const TABS = { home: 'Home', plan: 'Study plan', lessons: 'Lessons', map: 'Mastery map', quizzes: 'Module quizzes', exams: 'Exams', review: 'Daily review', notebook: 'Error notebook', analytics: 'Analytics' };
   function setView(v) { S.view = v; if (TABS[v]) { try { history.replaceState(null, '', '#' + v); } catch (e) { /* sandboxed */ } } render(); window.scrollTo(0, 0); }
 
   function masthead() {
@@ -322,8 +519,8 @@
           <button class="fbox f-steel" data-view="notebook">Error notebook<small>${Object.values(S.prog.cards).filter(c => !c.ok).length} misses to revisit</small></button></div>
         <div class="fcol"><div class="fh"><b>Rehearse:</b> exam conditions</div>
           ${nextQuiz ? `<button class="fbox f-line" data-quiz="${nextQuiz.id}" data-mode="exam">Timed quiz · LM ${nextQuiz.num}<small>${modQs(nextQuiz).filter(id => Q.get(id).opts).length} questions at 1:30 each</small></button>` : ''}
-          <button class="fbox f-line" data-view="quizzes">All module quizzes<small>${p.passed} of ${STUDY.length} passed</small></button>
-          <button class="fbox f-line" disabled>CFA Institute official mocks<small>In your Learning Ecosystem account; plan schedules them for April</small></button></div>
+          <button class="fbox f-line" data-act="test" data-id="${weakest.t.id}">Topic test · ${esc(weakest.t.name)}<small>30 questions at exam pace</small></button>
+          <button class="fbox f-line" ${lsGet(LS_MOCK) ? 'data-act="resume-mock"' : 'data-view="exams"'}>${lsGet(LS_MOCK) ? 'Resume your mock' : 'Full mock exam'}<small>${S.prog.mocks.length ? `Last: ${pct(S.prog.mocks[S.prog.mocks.length - 1].ok / S.prog.mocks[S.prog.mocks.length - 1].n)} · ` : ''}180 questions, two sessions</small></button></div>
       </div>
       <p class="src">Readiness averages your learning-outcome blocks on the Mastery map, weighted by each topic's exam weight. A block counts fully when its questions are answered right at 85% or better and have held up over spaced reviews.</p>
     </section>
@@ -363,7 +560,7 @@
     const phaseName = { pass: 'First pass through the curriculum', review: 'Review and weak spots', mock: 'Mock exams', final: 'Final week' };
     const notes = {
       review: i => ['Re-take every module quiz under 70%, weakest topic first.', 'Drill the two topics with the most points at risk on Home.', 'Clear the error notebook; second pass through Ethics standards.', 'Mixed daily reviews; re-take quizzes of modules that slipped below Solid.'][i % 4],
-      mock: i => ['Full mock under exam timing: 2 sessions of 2h15 with a break. Review every miss the next day.', 'CFA Institute official mock exam (Learning Ecosystem). Log weak topics here and drill them.', 'Second official mock. Final weak-spot drills.'][i % 3],
+      mock: i => ['Full mock (Exams tab) under exam timing: 2 sessions of 2h15 with a break. Review every miss the next day.', 'CFA Institute official mock exam (Learning Ecosystem). Log weak topics here and drill them.', 'Second official mock. Final weak-spot drills.'][i % 3],
       final: () => 'Keep it light: Ethics standards, daily review only, rest the day before.'
     };
     let html = '', lastPhase = '', pi = 0;
@@ -491,6 +688,7 @@
 
   // ---------- question runner ----------
   function vRun() {
+    if (S.run.onBreak) return vBreak();
     const R = S.run, id = R.ids[R.i], q = Q.get(id), m = MOD.get(q.m), set = q.set && SET.get(q.set);
     const a = R.ans[id] || {}, exam = R.mode === 'exam', shown = !exam && R.revealed;
     const opts = q.opts ? q.opts.map((o, k) => {
@@ -501,8 +699,8 @@
     const prior = R.prior[id];
     let foot = '';
     if (exam) {
-      foot = `<div class="qfoot"><button class="btn ghost" data-act="prev" ${R.i ? '' : 'disabled'}>Previous</button><button class="btn" data-act="next">${R.i + 1 < R.ids.length ? 'Next' : 'Review answers'} <kbd>Enter</kbd></button><button class="btn sm ghost" data-act="flag">${R.flags[id] ? 'Unflag' : 'Flag for review'} <kbd>F</kbd></button></div>
-        <div class="navgrid">${R.ids.map((x, k) => `<button class="nv ${R.ans[x] && R.ans[x].pick != null ? 'ans' : ''} ${k === R.i ? 'cur' : ''} ${R.flags[x] ? 'flag' : ''}" data-go="${k}">${k + 1}</button>`).join('')}</div>`;
+      foot = `<div class="qfoot"><button class="btn ghost" data-act="prev" ${R.i > segA(R) ? '' : 'disabled'}>Previous</button><button class="btn" data-act="next">${R.i + 1 < segB(R) ? 'Next' : 'Review answers'} <kbd>Enter</kbd></button><button class="btn sm ghost" data-act="flag">${R.flags[id] ? 'Unflag' : 'Flag for review'} <kbd>F</kbd></button></div>
+        <div class="navgrid">${R.ids.map((x, k) => k < segA(R) || k >= segB(R) ? '' : `<button class="nv ${R.ans[x] && R.ans[x].pick != null ? 'ans' : ''} ${k === R.i ? 'cur' : ''} ${R.flags[x] ? 'flag' : ''}" data-go="${k}">${k + 1}</button>`).join('')}</div>`;
     } else if (!R.revealed) {
       foot = q.opts ? `<div class="lock"><span class="lbl">Lock in</span><button class="btn sm" data-conf="0" ${a.pick == null ? 'disabled' : ''}>Sure <kbd>1</kbd></button><button class="btn sm" data-conf="1" ${a.pick == null ? 'disabled' : ''}>Unsure <kbd>2</kbd></button><button class="btn sm" data-conf="2" ${a.pick == null ? 'disabled' : ''}>Guess <kbd>3</kbd></button></div>`
         : `<p class="small muted">Open-ended: work it out on paper, then check the curriculum's solution and grade yourself.</p><div class="qfoot"><button class="btn" data-act="reveal">Show solution <kbd>Enter</kbd></button></div>`;
@@ -517,7 +715,8 @@
     const card = `<section class="qcard"><div class="qref">${esc(topicName(m))} · LM ${m.num} · Question ${q.n}${prior === null ? ' · new' : prior === 0 ? ' · missed before' : ' · seen before'}</div>
       <div class="stem">${paras(q.stem)}</div>${q.opts ? `<div class="opts">${opts}</div>` : ''}${foot}
       <p class="src">Source: ${esc(src(q))}</p></section>`;
-    const head = exam ? `<div class="exambar"><b>${esc(R.label)}</b><span class="muted">Question ${R.i + 1} of ${R.ids.length} · ${Object.values(R.ans).filter(x => x.pick != null).length} answered</span><span id="timer">${fmtSecs(Math.max(0, (R.deadline - Date.now()) / 1000))}</span><button class="btn sm" data-act="submit">Submit</button></div>`
+    const multi = R.bounds.length > 2, segAns = R.ids.slice(segA(R), segB(R)).filter(x => R.ans[x] && R.ans[x].pick != null).length;
+    const head = exam ? `<div class="exambar"><b>${esc(R.label)}</b><span class="muted">${multi ? `Session ${R.session + 1} of ${R.bounds.length - 1} · ` : ''}Question ${R.i + 1} of ${R.ids.length} · ${segAns} of ${segB(R) - segA(R)} answered</span><span id="timer">${fmtSecs(Math.max(0, (R.deadline - Date.now()) / 1000))}</span>${R.kind === 'mock' ? '<button class="btn sm pausebtn" data-act="pause">Pause and save</button>' : ''}<button class="btn sm" data-act="submit" ${R.kind === 'mock' ? 'style="margin-left:0"' : ''}>${multi && R.session < R.bounds.length - 2 ? `Submit session ${R.session + 1}` : 'Submit'}</button></div>`
       : `<section class="page slim" style="padding-bottom:18px"><div class="crumbs" style="margin:0"><div><div class="lbl">${esc(R.label)}</div><b>${R.i + 1} of ${R.ids.length}</b> <span class="pace" id="pace">${R.revealed ? '' : '0:00'}</span></div><button class="btn sm ghost" data-act="end">End and see results</button></div><div class="progress"><span style="width:${R.i / R.ids.length * 100}%"></span></div></section>`;
     return head + (set ? `<div class="qwrap split"><section class="qcard vign"><div class="qref">Case for questions ${set.lo}–${set.hi}<span class="small muted" style="text-transform:none;letter-spacing:0;font-weight:400"> · scrolls on its own</span></div><div class="stem">${paras(set.text)}</div><p class="src">Source: ${esc(TOP.get(m.topic).name)}, LM ${m.num}${set.pg ? ', p. ' + set.pg : ''}</p></section>${card}</div>` : card);
   }
@@ -530,10 +729,15 @@
     r.items.forEach(x => { const q = Q.get(x.id), m = MOD.get(q.m); if (q.los == null || !m.los.length) return; const k = q.m + ':' + q.los; const o = byLos.get(k) || { m, i: q.los, n: 0, ok: 0 }; o.n++; o.ok += x.ok ? 1 : 0; byLos.set(k, o); });
     return `<section class="page"><div class="lbl">${esc(r.label)} · ${r.mode === 'exam' ? 'timed' : 'practice'}</div>
       <div class="hero" style="margin:10px 0 6px"><div><div class="score">${r.n ? pct(sc) : '–'}</div><div class="small muted">${r.ok} of ${r.n} right</div></div>
-        <div>${r.kind === 'quiz' ? `<span class="chip ${sc >= PASS ? 'good' : 'mid'}">${sc >= PASS ? 'Passed' : 'Below the 70% pass mark'}</span>` : ''}
+        <div>${r.kind === 'quiz' ? `<span class="chip ${sc >= PASS ? 'good' : 'mid'}">${sc >= PASS ? 'Passed' : 'Below the 70% pass mark'}</span>` : r.kind === 'mock' || r.kind === 'test' ? `<span class="chip ${sc >= MOCK_TARGET ? 'good' : 'mid'}">${sc >= MOCK_TARGET ? 'At or above the 70% rule of thumb' : 'Below the 70% rule of thumb'}</span>` : ''}
           <p class="small" style="margin:.6em 0 .3em">${fmtSecs(r.secs)} total · ${r.n ? fmtSecs(r.items.reduce((a, x) => a + x.secs, 0) / r.n) : '–'} a question (exam pace is 1:30)</p>
-          <span class="xp">+${r.xp} XP${r.bonus >= 75 ? ' · module passed' : ''}</span></div></div>
-      ${byLos.size ? `<h3 class="sh">By learning outcome</h3>${[...byLos.values()].map(o => `<div class="skrow" style="grid-template-columns:minmax(0,1fr) 70px"><span class="skn small">${esc(o.m.los[o.i])}</span><span class="skp ${o.ok / o.n >= .75 ? 'lv-solid' : o.ok / o.n >= .5 ? 'lv-mid' : 'lv-weak'}">${o.ok}/${o.n}</span></div>`).join('')}` : ''}
+          <span class="xp">+${r.xp} XP${r.kind === 'quiz' && r.bonus >= 75 ? ' · module passed' : ''}</span></div></div>
+      ${r.kind === 'mock' || r.kind === 'test' ? (() => {
+        const rows = r.kind === 'mock' ? B.topics.filter(t => r.byTopic[t.id]).map(t => ({ label: `${t.name} (${t.w}%)`, ok: r.byTopic[t.id][0], n: r.byTopic[t.id][1] }))
+          : [...new Set(r.items.map(x => Q.get(x.id).m))].map(mid => { const xs = r.items.filter(x => Q.get(x.id).m === mid); return { label: `LM ${MOD.get(mid).num} ${MOD.get(mid).title}`, ok: xs.filter(x => x.ok).length, n: xs.length }; });
+        return `<h3 class="sh">By ${r.kind === 'mock' ? 'topic' : 'module'}</h3>${hbars(rows.map(o => ({ label: o.label, v: o.ok / o.n, text: `${o.ok}/${o.n}` })), { max: 1, ref: MOCK_TARGET, refLabel: 'Line: 70%' })}`;
+      })() : ''}
+      ${r.kind === 'quiz' && byLos.size ? `<h3 class="sh">By learning outcome</h3>${[...byLos.values()].map(o => `<div class="skrow" style="grid-template-columns:minmax(0,1fr) 70px"><span class="skn small">${esc(o.m.los[o.i])}</span><span class="skp ${o.ok / o.n >= .75 ? 'lv-solid' : o.ok / o.n >= .5 ? 'lv-mid' : 'lv-weak'}">${o.ok}/${o.n}</span></div>`).join('')}` : ''}
       <h3 class="sh">Every question</h3>
       ${r.items.map(x => { const q = Q.get(x.id); return `<details class="rv"><summary><span class="chip ${x.ok ? 'good' : 'bad'}">${x.ok ? 'Right' : 'Missed'}</span><span class="grow small">Q${q.n} · ${snippet(q)}</span></summary>
         <div class="stem">${paras(q.stem)}</div>${q.opts ? `<div class="opts">${q.opts.map((o, k) => `<div class="opt ${k === q.ans ? 'right' : x.pick === k ? 'wrong' : ''}"><span class="ol">${'ABC'[k]}</span><span>${inl(o)}</span></div>`).join('')}</div>` : ''}<div class="sol">${paras(q.sol)}</div><p class="src">Source: ${esc(src(q))}</p></details>`; }).join('')}
@@ -580,18 +784,22 @@
     else if (S.view === 'results') body = vResults();
     else if (S.view === 'module' && S.mod) body = vModule();
     else if (S.view === 'lesson' && S.les) body = vLesson();
-    else body = ({ plan: vPlan, lessons: vLessons, map: vMap, quizzes: vQuizzes, review: vReview, notebook: vNotebook }[S.view] || vHome)();
+    else body = ({ plan: vPlan, lessons: vLessons, map: vMap, quizzes: vQuizzes, exams: vExams, review: vReview, notebook: vNotebook, analytics: vAnalytics }[S.view] || vHome)();
     root.innerHTML = masthead() + `<main id="main">${body}</main>`;
     fillImages(root);
     clearInterval(ticker);
     if (S.view === 'run' && S.run) ticker = setInterval(tick, 1000);
+    if (S.run && S.run.kind === 'mock') { S.run.lastSeen = Date.now(); lsSet(LS_MOCK, S.run); }
   }
   function tick() {
     const R = S.run; if (!R) return;
     if (R.mode === 'exam') {
+      if (R.onBreak || !R.deadline) return;
+      // keep the saved copy fresh, so closing the tab without pausing loses at most a few seconds
+      if (R.kind === 'mock' && Date.now() - (R.lastSeen || 0) > 15000) { R.lastSeen = Date.now(); lsSet(LS_MOCK, R); }
       const left = (R.deadline - Date.now()) / 1000, el = $('#timer');
       if (el) { el.textContent = fmtSecs(Math.max(0, left)); el.classList.toggle('low', left < 120); }
-      if (left <= 0) { toast('Time is up. Your answers were submitted.'); finishRun(); }
+      if (left <= 0) { toast('Time is up. This session was submitted.'); endSession(); }
     } else if (!R.revealed) {
       const s = (Date.now() - R.qt) / 1000, el = $('#pace');
       if (el) { el.textContent = fmtSecs(s); el.classList.toggle('over', s > PACE); }
@@ -618,11 +826,12 @@
     const R = S.run, ta = $('#note');
     if (ta) saveNote(R.ids[R.i], { text: ta.value.trim() });
     if (R.mode === 'exam') { const id = R.ids[R.i]; const a = R.ans[id] = R.ans[id] || { pick: null }; a.secs = (a.secs || 0) + (Date.now() - R.qt) / 1000; }
-    if (R.i + 1 >= R.ids.length) { if (R.mode === 'exam') { R.i = R.ids.length - 1; toast('Last question. Submit when you are ready.'); render(); return; } finishRun(); return; }
+    if (R.mode === 'exam' && R.i + 1 >= segB(R)) { toast('Last question of this session. Submit when you are ready.'); render(); return; }
+    if (R.i + 1 >= R.ids.length) { finishRun(); return; }
     R.i++; R.revealed = false; R.qt = Date.now();
     render(); window.scrollTo(0, 0);
   }
-  function go(k) { const R = S.run; const id = R.ids[R.i]; const a = R.ans[id] = R.ans[id] || { pick: null }; a.secs = (a.secs || 0) + (Date.now() - R.qt) / 1000; R.i = Math.max(0, Math.min(R.ids.length - 1, k)); R.qt = Date.now(); render(); window.scrollTo(0, 0); }
+  function go(k) { const R = S.run; const id = R.ids[R.i]; const a = R.ans[id] = R.ans[id] || { pick: null }; a.secs = (a.secs || 0) + (Date.now() - R.qt) / 1000; R.i = Math.max(segA(R), Math.min(segB(R) - 1, k)); R.qt = Date.now(); render(); window.scrollTo(0, 0); }
   function saveNote(id, patch) {
     const n = Object.assign({}, S.prog.notes[id], patch, { t: Date.now() });
     if (!n.tag && !n.text) delete S.prog.notes[id]; else S.prog.notes[id] = n;
@@ -657,7 +866,13 @@
     else if (a === 'next') next();
     else if (a === 'prev') go(S.run.i - 1);
     else if (a === 'flag') { const id = S.run.ids[S.run.i]; S.run.flags[id] = !S.run.flags[id]; render(); }
-    else if (a === 'submit') { const R = S.run, open = R.ids.filter(id => !R.ans[id] || R.ans[id].pick == null).length; if (open && !R.confirmSubmit) { R.confirmSubmit = true; toast(`${open} unanswered. Press Submit again to finish.`); return; } finishRun(); }
+    else if (a === 'submit') { const R = S.run, open = R.ids.slice(segA(R), segB(R)).filter(id => !R.ans[id] || R.ans[id].pick == null).length; if (open && R.confirmSubmit !== R.session) { R.confirmSubmit = R.session; toast(`${open} unanswered. Press Submit again to finish this session.`); return; } endSession(); }
+    else if (a === 'pause') pauseMock(true);
+    else if (a === 'start-session') { const R = S.run; R.onBreak = false; R.deadline = Date.now() + R.sessionSecs * 1000; R.qt = Date.now(); render(); window.scrollTo(0, 0); }
+    else if (a === 'mock') startMock();
+    else if (a === 'resume-mock') resumeMock();
+    else if (a === 'discard-mock') { if (S.confirmDiscard) { lsDel(LS_MOCK); S.confirmDiscard = false; render(); toast('Saved mock discarded'); } else { S.confirmDiscard = true; toast('Press Discard again to throw away the saved mock.'); } }
+    else if (a === 'test') startTest(d.id);
     else if (a === 'end') finishRun();
     else if (a === 'save-settings') { S.prog.settings.exam = $('#set-exam').value; S.prog.settings.newPerDay = Math.max(0, Math.min(80, +$('#set-new').value || 15)); save(); render(); toast('Settings saved'); }
     else if (a === 'save-plan') { const ex = $('#plan-exam').value, st = $('#plan-start').value; if (ex) S.prog.settings.exam = ex; if (st) S.prog.settings.planStart = st; save(); render(); toast('Plan updated'); }
@@ -665,7 +880,7 @@
     else if (a === 'import') { try { const p = JSON.parse($('#backup').value); if (!p || typeof p.cards !== 'object') throw 0; S.prog = mergeProg(S.prog, p); B.topics.forEach(t => dirty.add(t.id)); save(); render(); toast('Progress restored and merged'); } catch (err) { toast('That text is not a progress backup'); } }
   });
   // leaving a run mid-way: answers already locked in are kept; a timed quiz is abandoned without a score
-  function confirmLeave() { if (S.run.leaveOk) return true; S.run.leaveOk = true; toast('Click again to leave. Locked-in answers are kept.'); return false; }
+  function confirmLeave() { if (S.run.kind === 'mock') { pauseMock(false); return true; } if (S.run.leaveOk) return true; S.run.leaveOk = true; toast('Click again to leave. Locked-in answers are kept.'); return false; }
 
   document.addEventListener('change', e => {
     const t = e.target;

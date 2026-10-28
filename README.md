@@ -21,6 +21,8 @@ Private prep site for the CFA Level I exam (May 2027 window), built from the off
 | Lessons | One per module, in `lessons/<topic>.md` (original writing): exam takeaway, plain English, formulas, worked example, traps, 4-question quick check. All 10 topics, 102 lessons (one per study module), 408 check questions; the build shuffles each question's options so answers don't cluster on one letter. Format is documented in `tools/lessons.py`. |
 | Mastery map | One block per learning outcome (339): not started, started, solid, gold. Click a block for its outcome, matched questions and a drill. |
 | Module quizzes | Every module's end-of-chapter questions in practice mode (solution after each answer) or timed mode (1:30 a question, navigator, flags, results at the end). Pass mark 70%. Each module has its own page with overview, outcomes and quiz history. |
+| Exams | **Full mocks**: 180 questions in two timed sessions of 90 (2h15 each) with a break; weighted by exam weight; held-back questions first, then never-answered, then longest-unseen; standalone questions first, item-set questions (with their case) fill short topics such as Derivatives. Pause any time: the run and clock are saved in the browser (`cfa-l1-mock-run`). **Topic tests**: up to 30 questions per topic at 1:30 each, spread across modules, never using the mock reserve. Results break down by topic or module against a 70% rule-of-thumb line. |
+| Analytics | Projected score with a 95% sample-size range (latest mock, else exam-weighted accuracy in topics with 10+ answers), accuracy and pace by topic, confidence check (right when sure/unsure/guess), timed-score history, reasons for misses, weekly practice time. |
 | Daily review | Spaced repetition: due reviews plus new questions from this week's modules. |
 | Error notebook | Misses and lucky guesses, tagged concept / calculation / misread. |
 
@@ -52,5 +54,5 @@ Private prep site for the CFA Level I exam (May 2027 window), built from the off
 
 - **A. Shell, Home, study plan, mastery map, module quizzes** (done)
 - **B.** Lessons for all 102 study modules (done). `tools/outline.py` dumps a module's headings, outcomes and summary to the scratchpad as a writing aid (curriculum text: keep it out of the repo).
-- **C.** Topic tests, full mocks from the reserve plus generated questions, analytics page
+- **C.** Topic tests, full mocks, analytics page (done). Mocks currently top up from never-answered and item-set questions; Phase D's calculation generators can add fresh questions once the bank is exhausted.
 - **D.** Calculation generators, formula flashcards, Ethics casebook, Ask Claude
