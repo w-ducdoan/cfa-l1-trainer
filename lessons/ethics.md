@@ -1,3 +1,10 @@
+---
+type: lesson-set
+workstation: Finance Technicals HQ
+topic: ethics
+last_updated: 2026-10-27
+---
+
 # v10m1
 take: Professions earn trust by holding members to ethics above the law; when a dilemma comes up, run it through Identify, Consider, Act, Reflect.
 mins: 15

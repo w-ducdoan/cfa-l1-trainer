@@ -1,3 +1,10 @@
+---
+type: lesson-set
+workstation: Finance Technicals HQ
+topic: equity
+last_updated: 2026-10-27
+---
+
 # v5m1
 take: Common shares are the residual claim with votes; preferred shares sit above common with fixed, usually non-voting dividends; public equity is liquid and disclosed, private equity is concentrated, illiquid and spans venture capital to buyouts.
 mins: 20

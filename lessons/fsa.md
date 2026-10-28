@@ -1,3 +1,10 @@
+---
+type: lesson-set
+workstation: Finance Technicals HQ
+topic: fsa
+last_updated: 2026-10-27
+---
+
 # v4m1
 take: Analysis follows six steps from purpose to follow-up; the statements alone aren't enough, so read the notes, MD&A, the audit report and outside sources, and know which audit opinion means what.
 mins: 20

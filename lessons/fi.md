@@ -1,3 +1,10 @@
+---
+type: lesson-set
+workstation: Finance Technicals HQ
+topic: fi
+last_updated: 2026-10-27
+---
+
 # v6m1
 take: A bond is defined by its issuer, maturity, par, coupon, seniority and contingency features; its price and yield move inversely; the indenture sets the rules, with affirmative covenants (must do) and negative covenants (must not do).
 mins: 20
