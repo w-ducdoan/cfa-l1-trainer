@@ -48,6 +48,12 @@ report = []
 def warn(msg): report.append(msg)
 
 
+def is_running_head(text, y0):
+    """Running heads ('58 Learning Module 2 Title', 'Practice Problems 59') sit above y=66 in some volumes."""
+    t = text.strip()
+    return y0 < 66 and (re.fullmatch(r'\d{1,4}', t) is not None or re.match(r'^\d{1,4}\s', t) is not None or re.search(r'\s\d{1,4}$', t) is not None)
+
+
 class Line:
     __slots__ = ('page', 'x0', 'y0', 'x1', 'y1', 'text', 'special')
     def __init__(self, page, bbox, text, special):
@@ -82,6 +88,17 @@ class Volume:
         except (OSError, ValueError):
             self.tables = {}
 
+    def printed(self, pno):
+        """The page number printed in the running head (what a reader finds in the book), else the PDF page."""
+        for b in self.doc[pno].get_text('dict')['blocks']:
+            for l in b.get('lines', []):
+                t = ''.join(s['text'] for s in l['spans']).strip()
+                if l['bbox'][1] < 66:
+                    t = re.sub(r'Learning Module \d+', '', t).strip()
+                    m = re.fullmatch(r'(\d{1,4})', t) or re.match(r'^(\d{1,4})\s', t) or re.search(r'\s(\d{1,4})$', t)
+                    if m: return int(m.group(1))
+        return pno + 1
+
     def save_cache(self):
         CACHE.mkdir(exist_ok=True)
         self.cache_file.write_text(json.dumps(self.tables))
@@ -114,6 +131,7 @@ class Volume:
                 text = text[:-1].replace('­', '') + '­' if text.endswith('­') else text.replace('­', '')
                 x0, y0, x1, y1 = l['bbox']
                 if not text.strip() or y0 < HEAD_Y or y0 > FOOT_Y or 'For candidate use only' in text: continue
+                if is_running_head(text, y0): continue
                 if any(t[0] - 2 <= x0 and y0 >= t[1] - 2 and y1 <= t[3] + 2 for t in tables): continue
                 math = ZW in text or '√' in text or re.fullmatch(r'[_\s]+', text) is not None
                 text = re.sub(r'\s+', ' ', text.replace(ZW, ' ')).strip()
@@ -274,39 +292,45 @@ def set_from(vol, items, mid, n_default):
     k = next((j for j, z in enumerate(items[:4]) if isinstance(z, Line) and SET_RANGE.search(z.text)), 0)
     sid = f'{mid}set{lo}'
     imgs = []
-    s = dict(id=sid, m=mid, lo=lo, hi=hi, text=text_of(vol, items[k + 1:], sid, imgs))
+    first = next((z for z in items if isinstance(z, Line)), None)
+    s = dict(id=sid, m=mid, lo=lo, hi=hi, pg=vol.printed(first.page) if first else None, text=text_of(vol, items[k + 1:], sid, imgs))
     if imgs: s['img'] = imgs
     return s
 
 
 def extract_los(vol, p0):
     """LOS bullets and module-overview bullets from the module's opening pages."""
-    los, ov, mode, los_x, prev = [], [], None, 0, None
+    # Uses unmerged lines and keeps only the outcomes column: some modules put a sidebar note beside the
+    # outcomes, and merging same-baseline fragments would splice the sidebar into them.
+    los, ov, mode, col, prev = [], [], None, None, None
     for pno in range(p0, min(p0 + 3, vol.doc.page_count)):
-        for z in vol.page_lines(pno):
+        raw = []
+        for b in vol.doc[pno].get_text('dict')['blocks']:
+            for l in b.get('lines', []):
+                t = re.sub(r'\s+', ' ', ''.join(s['text'] for s in l['spans']).replace('­', '')).strip()
+                if t and HEAD_Y <= l['bbox'][1] <= FOOT_Y and 'For candidate use only' not in t and not is_running_head(t, l['bbox'][1]):
+                    raw.append(Line(pno, l['bbox'], t, False))
+        raw.sort(key=lambda z: (round(z.y0), z.x0))
+        for z in raw:
             t = z.text
-            # wrapped lines overlap the line above; a new LOS bullet starts at or below the previous line's bottom
-            fresh = prev is None or prev.page != z.page or z.y0 - prev.y1 > -1
+            if t.upper() == 'LEARNING OUTCOMES': mode, col = 'los', None; continue
+            if t.upper() == 'LEARNING MODULE OVERVIEW': mode, col = 'ov', None; continue
+            if mode is None or t in ('Mastery',) or t.lower().startswith('the candidate should be able to'): continue
+            if col is not None and not (col - 4 <= z.x0 <= col + 26): continue  # sidebar or margin text
+            if t.upper() == 'INTRODUCTION' or re.fullmatch(r'\d+', t) or (t.isupper() and len(t) > 6):
+                if mode == "ov": return list(dict.fromkeys(x for x in los if x[:1].islower() and len(x) > 15)), [x for x in ov if x]
+                mode = None; continue
+            # wrapped lines overlap the line above; a new bullet starts at or below the previous line's bottom
+            fresh = prev is None or prev.page != z.page or z.y0 - prev.y1 > -1 or col is None
             prev = z
-            if t.upper() == 'LEARNING OUTCOMES': mode = 'los'; continue
-            if t.upper() == 'LEARNING MODULE OVERVIEW': mode = 'ov'; continue
-            if mode == 'los':
-                if t.upper() == 'INTRODUCTION' or re.fullmatch(r'\d+', t) or (t.isupper() and len(t) > 6): mode = None; continue
-                t = re.sub(r'^Mastery\s*', '', t)
-                if t.lower().startswith('the candidate should be able to'):
-                    t = t.split(':', 1)[1].strip() if ':' in t else ''
-                    if not t: continue
-                if t[:1] in '□' or not los or z.x0 < los_x - 3 or fresh:
-                    los.append(t.lstrip('□ ').strip()); los_x = z.x0
-                else:
-                    los[-1] = vol.join(los[-1], t)
-            elif mode == 'ov':
-                if (t.isupper() and len(t) > 6) or re.fullmatch(r'\d+', t): return [x for x in los if x], [x for x in ov if x]
-                if t[:1] in '■▪•' or not ov:
-                    ov.append(t.lstrip('■▪• ').strip())
-                else:
-                    ov[-1] = vol.join(ov[-1], t)
-    return [x for x in los if x], [x for x in ov if x]
+            target = los if mode == 'los' else ov
+            mark = '□' if mode == 'los' else '■▪•'
+            if col is None: col = z.x0
+            if t[:1] in mark or fresh or not target:
+                target.append(t.lstrip(mark + ' ').strip())
+            else:
+                target[-1] = vol.join(target[-1], t)
+    return list(dict.fromkeys(x for x in los if x[:1].islower() and len(x) > 15)), [x for x in ov if x]
 
 
 def extract_volume(num, tkey):
@@ -356,7 +380,7 @@ def extract_volume(num, tkey):
             imgs = []
             stem, opts = parse_question(strip_number(text_of(vol, body, f'{mid}q{n}', imgs)))
             sol = strip_number(text_of(vol, sol_by_n.get(n, []), f'{mid}s{n}', imgs))
-            q = dict(id=f'{mid}q{n}', m=mid, n=n, stem=stem, opts=opts, sol=sol)
+            q = dict(id=f'{mid}q{n}', m=mid, n=n, pg=vol.printed(body[0].page), stem=stem, opts=opts, sol=sol)
             if opts:
                 a = ANS_LEAD.match(sol[0]) if sol else None
                 a = a.group(1) if a else None
@@ -378,6 +402,51 @@ def extract_volume(num, tkey):
     return out_mods, out_sets, out_qs
 
 
+STOP = set('the and for with that this from are which most likely following its their than into will would should be is of to in on as by an or at it not can has have was were been when what how does do using based given both each other such'.split())
+
+
+def map_los(bank):
+    """Tag each question with the learning outcome it most likely tests (TF-IDF cosine within its module).
+    The curriculum does not label questions by LOS, so this is an estimate used only for the mastery map."""
+    import math
+    words = lambda t: [w for w in re.findall(r'[a-z]{3,}', t.lower()) if w not in STOP]
+    docs = [m_los for m in bank['modules'] for m_los in m['los']] + [' '.join(q['stem'] + (q['opts'] or []) + q['sol'][:2]) for q in bank['questions']]
+    df = collections.Counter(w for d in docs for w in set(words(d)))
+    N = len(docs)
+    def vec(t):
+        c = collections.Counter(words(t))
+        v = {w: (1 + math.log(n)) * math.log(N / (1 + df[w])) for w, n in c.items()}
+        norm = math.sqrt(sum(x * x for x in v.values())) or 1
+        return {w: x / norm for w, x in v.items()}
+    mods = {m['id']: m for m in bank['modules']}
+    for q in bank['questions']:
+        los = mods[q['m']]['los']
+        if not los: continue
+        if len(los) == 1: q['los'] = 0; continue
+        qv = vec(' '.join(q['stem'] + (q['opts'] or []) + q['sol'][:2]))
+        scores = [sum(qv.get(w, 0) * x for w, x in vec(l).items()) for l in los]
+        q['los'] = max(range(len(los)), key=lambda i: scores[i])
+
+
+def reserve_mock_pool(bank, size=180):
+    """Hold back about `size` standalone multiple-choice questions, weighted by exam weight, for the mocks.
+    Selection is deterministic (hash of the id), at most a quarter of any module (min 1), from modules
+    with 4+ questions, so every module keeps most of its questions for its quiz."""
+    import hashlib
+    h = lambda s: hashlib.md5(s.encode()).hexdigest()
+    by_mod = collections.defaultdict(list)
+    for q in bank['questions']:
+        if q['opts'] and len(q['opts']) == 3 and 'ans' in q and 'set' not in q: by_mod[q['m']].append(q)
+    total_w = sum(t['w'] for t in bank['topics'])
+    for t in bank['topics']:
+        want = round(size * t['w'] / total_w)
+        pool = []
+        for mid in t['modules']:
+            n_mod = sum(1 for q in bank['questions'] if q['m'] == mid)
+            if n_mod >= 4: pool += sorted(by_mod[mid], key=lambda q: h(q['id']))[:max(1, n_mod // 4)]
+        for q in sorted(pool, key=lambda q: h('r' + q['id']))[:want]: q['res'] = 1
+
+
 def main():
     IMG.mkdir(parents=True, exist_ok=True)
     for f in IMG.glob('*.png'): f.unlink()
@@ -388,6 +457,9 @@ def main():
         bank['modules'] += mods; bank['sets'] += sets; bank['questions'] += qs
         mc = sum(1 for q in qs if q['opts']); ans = sum(1 for q in qs if 'ans' in q)
         print(f'V{num:<2} {name:<36} modules {len(mods):>2}  questions {len(qs):>4}  multiple choice {mc:>4}  keyed {ans:>4}  sets {len(sets):>3}', flush=True)
+    map_los(bank)
+    reserve_mock_pool(bank)
+    print(f'mock reserve {sum(1 for q in bank["questions"] if q.get("res"))} questions; LOS-tagged {sum(1 for q in bank["questions"] if "los" in q)}')
     (OUT / 'bank.json').write_text(json.dumps(bank, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     (OUT / 'report.txt').write_text('\n'.join(report) + '\n', encoding='utf-8')
     print(f'total questions {len(bank["questions"])}, images {len(list(IMG.glob("*.png")))}, warnings {len(report)}')

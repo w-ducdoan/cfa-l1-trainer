@@ -32,7 +32,7 @@ for t, imgs in packs.items():
 all_imgs = {k: v for imgs in packs.values() for k, v in imgs.items()}
 
 fonts = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
-         '<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">\n')
+         '<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400&display=swap" rel="stylesheet">\n')
 style = '<style>\n' + (src / 'style.css').read_text(encoding='utf-8') + '\n</style>\n'
 app_js = (src / 'app.js').read_text(encoding='utf-8')
 title = '<title>CFA L1 Trainer</title>\n'

@@ -11,6 +11,8 @@ CSP = ("default-src 'none'; "
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    extensions_map = {**http.server.SimpleHTTPRequestHandler.extensions_map, '.html': 'text/html; charset=utf-8', '.json': 'application/json; charset=utf-8'}
+
     def end_headers(self):
         self.send_header('Content-Security-Policy', CSP)
         super().end_headers()
