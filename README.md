@@ -18,7 +18,7 @@ Private prep site for the CFA Level I exam (May 2027 window), built from the off
 | :-- | :-- |
 | Home | Greeting with this week's plan, at-a-glance band (readiness, questions answered, modules passed, level, streak), Learn / Practice / Rehearse boxes, points at risk by topic, 14-day activity, level progress, mini mastery map, recent misses, settings and backup |
 | Study plan | Every module once in curriculum order, paced by page count against ~300 hours; first pass ends 8 weeks before the exam, then review, mocks and a light final week. Unpassed modules from past weeks carry into this week. |
-| Lessons | One per module, in `lessons/<topic>.md` (original writing): exam takeaway, plain English, formulas, worked example, traps, 4-question quick check. Written so far: Ethics, FSA, Fixed Income, Equity (53 lessons, 212 check questions). Format is documented in `tools/lessons.py`. |
+| Lessons | One per module, in `lessons/<topic>.md` (original writing): exam takeaway, plain English, formulas, worked example, traps, 4-question quick check. All 10 topics, 102 lessons (one per study module), 408 check questions; the build shuffles each question's options so answers don't cluster on one letter. Format is documented in `tools/lessons.py`. |
 | Mastery map | One block per learning outcome (339): not started, started, solid, gold. Click a block for its outcome, matched questions and a drill. |
 | Module quizzes | Every module's end-of-chapter questions in practice mode (solution after each answer) or timed mode (1:30 a question, navigator, flags, results at the end). Pass mark 70%. Each module has its own page with overview, outcomes and quiz history. |
 | Daily review | Spaced repetition: due reviews plus new questions from this week's modules. |
@@ -51,6 +51,6 @@ Private prep site for the CFA Level I exam (May 2027 window), built from the off
 ## Roadmap
 
 - **A. Shell, Home, study plan, mastery map, module quizzes** (done)
-- **B.** Lessons per module: Ethics, FSA, Fixed Income, Equity (done); Quant, Economics, Corporate Issuers, Derivatives, Alternatives, Portfolio Management (to do). `tools/outline.py` dumps a module's headings, outcomes and summary to the scratchpad as a writing aid (curriculum text: keep it out of the repo).
+- **B.** Lessons for all 102 study modules (done). `tools/outline.py` dumps a module's headings, outcomes and summary to the scratchpad as a writing aid (curriculum text: keep it out of the repo).
 - **C.** Topic tests, full mocks from the reserve plus generated questions, analytics page
 - **D.** Calculation generators, formula flashcards, Ethics casebook, Ask Claude

@@ -444,7 +444,7 @@
   // ---------- lessons ----------
   function vLessons() {
     const total = Object.keys(LES).length, read = Object.keys(S.prog.lessons).filter(k => LES[k]).length;
-    return `<section class="page"><h2>Lessons</h2><p class="sub">One lesson per module: the exam takeaway, the idea in plain English, the formulas, a worked example, the traps, and a quick check. ${total} written so far; the rest are on the way.</p>
+    return `<section class="page"><h2>Lessons</h2><p class="sub">One lesson per module: the exam takeaway, the idea in plain English, the formulas, a worked example, the traps, and a quick check. ${total >= STUDY.length ? `All ${total} modules covered.` : `${total} written so far; the rest are on the way.`}</p>
       <div class="glance"><div class="glh">Lessons</div><div class="glrow" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><b>${read}<small>/${total}</small></b><span>Lessons read</span></div>
         <div><b>${Object.values(S.prog.lessons).reduce((a, l) => a + l.ok, 0)}<small>/${Object.values(S.prog.lessons).reduce((a, l) => a + l.n, 0)}</small></b><span>Quick-check answers right</span></div>
         <div><b>${B.topics.filter(t => t.modules.some(hasLesson)).length}<small>/10</small></b><span>Topics with lessons</span></div></div></div>

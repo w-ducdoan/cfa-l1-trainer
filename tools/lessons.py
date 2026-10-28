@@ -95,6 +95,14 @@ def parse_checks(lines):
     for c in checks:
         if len(c['o']) < 2 or c['a'] is None or c['a'] >= len(c['o']):
             raise ValueError(f'bad quick-check question: {c["q"][:60]}')
+        # Shuffle the options so the right answer isn't predictable by letter. The order is seeded by
+        # the question text, so it's stable between builds; explanations never refer to option letters.
+        import hashlib, random
+        rnd = random.Random(hashlib.md5(c['q'].encode()).hexdigest())
+        order = list(range(len(c['o'])))
+        rnd.shuffle(order)
+        c['o'] = [c['o'][k] for k in order]
+        c['a'] = order.index(c['a'])
         c['q'], c['o'], c['why'] = inline(c['q']), [inline(o) for o in c['o']], inline(c['why'])
     return checks
 
