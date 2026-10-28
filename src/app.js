@@ -91,19 +91,21 @@
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); }
 
-  // Images live in per-topic packs (img/<topic>.js) that add to window.CFA_IMG.
+  // Images: the offline page inlines them all in window.CFA_IMG; the artifact fetches per-topic packs
+  // (img/<topic>.json) on demand, since its viewer allows fetch() of published files but not script files.
   window.CFA_IMG = window.CFA_IMG || {};
   const packs = {};
   function loadPack(topic) {
-    if (!packs[topic]) packs[topic] = new Promise(res => {
-      const s = document.createElement('script'); s.src = 'img/' + topic + '.js';
-      s.onload = () => res(true); s.onerror = () => res(false); document.head.appendChild(s);
-    });
+    if (!packs[topic]) packs[topic] = fetch('img/' + topic + '.json')
+      .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then(imgs => { Object.assign(window.CFA_IMG, imgs); return true; })
+      .catch(() => { delete packs[topic]; return false; });
     return packs[topic];
   }
   function fillImages(root) {
     root.querySelectorAll('img[data-img]').forEach(img => {
       const name = img.dataset.img, topic = topicOfVol[+name.match(/^v(\d+)/)[1]];
+      if (window.CFA_IMG[name]) { img.src = window.CFA_IMG[name]; return; }
       loadPack(topic).then(ok => { const src = window.CFA_IMG[name]; if (src) img.src = src; else if (!ok) img.alt = 'Exhibit could not load. Check the source page in the curriculum.'; });
     });
   }

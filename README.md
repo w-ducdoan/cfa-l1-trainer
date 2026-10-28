@@ -27,7 +27,7 @@ Private practice site for the CFA Level I exam (May 2027 window), built from the
 1. Put the curriculum PDFs (`cfa-program2027L1V1.pdf` ... `V10.pdf`) in `~/Downloads`. They never go in the repo.
 2. `python -P tools/extract.py` (needs PyMuPDF; the first run takes ~6 minutes, later runs use `tools/.cache/`).
 3. `python build.py`
-4. Republish `dist/page.html` to the same artifact URL, with `bank.js` and `img/*.js` as supporting files.
+4. Republish `dist/page.html` to the same artifact URL, with `img/*.json` as supporting files. The artifact viewer blocks script files (inline scripts and a few CDNs only), so the bank is inlined and images are fetched as JSON. `python -P tools/csp_serve.py` serves `dist/` under a similar policy to catch this locally.
 5. Commit and push.
 
 ## How scheduling works
