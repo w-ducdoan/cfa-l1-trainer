@@ -277,6 +277,7 @@ svg.chart{width:100%;height:auto;display:block}
 .xp{display:inline-block;background:var(--gold-soft);color:var(--mid);font-weight:700;padding:.15em .7em;font-size:.88rem}
 details.rv{border-bottom:1px solid var(--line);padding:6px 0}details.rv summary{cursor:pointer;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 details.rv summary::-webkit-details-marker{display:none}
+details.gx{border-bottom:1px solid var(--line);padding:8px 0}details.gx summary{cursor:pointer;display:flex;gap:10px;align-items:center;list-style:none}details.gx summary::-webkit-details-marker{display:none}details.gx .list{margin-top:6px}
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:var(--navy-ink);padding:8px 16px;font-size:.92rem;z-index:20}
 .empty{text-align:center;padding:26px 12px;color:var(--muted)}
 
