@@ -306,3 +306,4 @@ details.gx{border-bottom:1px solid var(--line);padding:8px 0}details.gx summary{
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .fx{font-weight:600;font-size:1.05em;letter-spacing:.01em}.sol .fx{font-size:1.15em;margin-bottom:.4em}table.fsheet td{vertical-align:top}table.fsheet td:first-child{width:34%}
+.ask{margin-top:12px}.askrow{display:flex;gap:8px;align-items:center}.askrow .txt{flex:1;min-width:0;margin:0}.askout{margin-top:10px;padding:12px 14px;border-left:3px solid var(--gold);background:var(--gold-soft);white-space:pre-wrap;font-size:.95em;line-height:1.5}

@@ -312,6 +312,7 @@ details.gx{border-bottom:1px solid var(--line);padding:8px 0}details.gx summary{
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .fx{font-weight:600;font-size:1.05em;letter-spacing:.01em}.sol .fx{font-size:1.15em;margin-bottom:.4em}table.fsheet td{vertical-align:top}table.fsheet td:first-child{width:34%}
+.ask{margin-top:12px}.askrow{display:flex;gap:8px;align-items:center}.askrow .txt{flex:1;min-width:0;margin:0}.askout{margin-top:10px;padding:12px 14px;border-left:3px solid var(--gold);background:var(--gold-soft);white-space:pre-wrap;font-size:.95em;line-height:1.5}
 
 </style>
 <div id="app"><p style="padding:24px">Loading the question bank…</p></div>
@@ -1025,7 +1026,7 @@ window.CFA_CASES = [
   // ---------- progress ----------
   // cards[qid] = { due, ivl, ease, reps, lapses, last, ok, conf, h: [[t, ok, conf, secs]] }
   const blank = () => ({ v: 2, updated: 0, cards: {}, notes: {}, daily: {}, los: {}, quizzes: {}, lessons: {}, tests: {}, mocks: [], xp: 0, settings: { exam: '', newPerDay: 15, planStart: '' } });
-  const S = { view: 'home', prog: Object.assign(blank(), lsGet(LS_KEY) || {}), sync: 'local', refs: null, run: null, result: null, mod: null, sel: null, nb: { topic: '', tag: '' } };
+  const S = { sample: null, askOff: false, askAns: {}, asking: false, view: 'home', prog: Object.assign(blank(), lsGet(LS_KEY) || {}), sync: 'local', refs: null, run: null, result: null, mod: null, sel: null, nb: { topic: '', tag: '' } };
   S.prog.settings = Object.assign(blank().settings, S.prog.settings);
   if (!S.prog.quizzes) S.prog.quizzes = {};
   if (!S.prog.lessons) S.prog.lessons = {};
@@ -1769,7 +1770,7 @@ window.CFA_CASES = [
     } else {
       const note = S.prog.notes[id] || {}, missed = q.opts ? !a.ok : a.self > 0;
       foot = `${q.opts ? `<div class="fb ${a.ok ? 'ok' : 'no'}"><b>${a.ok ? 'Correct.' : `Not quite. The answer is ${'ABC'[q.ans]}.`}</b></div>` : a.self == null ? '' : `<div class="fb ${a.self === 0 ? 'ok' : 'no'}"><b>${['Got it', 'Partly', 'Missed it'][a.self]}</b></div>`}
-        <div class="sol">${q.flash ? `<p class="fx">${esc(q.sol[0])}</p><p>${esc(q.sol[1])}</p>` : paras(q.sol)}</div>
+        <div class="sol">${q.flash ? `<p class="fx">${esc(q.sol[0])}</p><p>${esc(q.sol[1])}</p>` : paras(q.sol)}</div>${q.flash ? '' : askBox(id)}
         ${!q.opts && a.self == null ? `<div class="lock"><span class="lbl">How did you do?</span><button class="btn sm" data-self="0">Got it <kbd>1</kbd></button><button class="btn sm" data-self="1">Partly <kbd>2</kbd></button><button class="btn sm" data-self="2">Missed it <kbd>3</kbd></button></div>` : ''}
         ${missed ? `<div class="tags"><span class="lbl">Why I missed it</span>${['concept', 'calc', 'misread'].map(t => `<button class="tagbtn" data-tag="${t}" aria-pressed="${note.tag === t}">${{ concept: 'Concept', calc: 'Calculation', misread: 'Misread' }[t]}</button>`).join('')}</div><textarea id="note" class="txt" placeholder="Note to future you (optional)" style="margin-top:8px">${esc(note.text || '')}</textarea>` : ''}
         ${q.opts || a.self != null ? `<div class="qfoot"><button class="btn" data-act="next">${R.i + 1 < R.ids.length ? 'Next question' : 'See results'} <kbd>Enter</kbd></button></div>` : ''}`;
@@ -1802,7 +1803,7 @@ window.CFA_CASES = [
       ${r.kind === 'quiz' && byLos.size ? `<h3 class="sh">By learning outcome</h3>${[...byLos.values()].map(o => `<div class="skrow" style="grid-template-columns:minmax(0,1fr) 70px"><span class="skn small">${esc(o.m.los[o.i])}</span><span class="skp ${o.ok / o.n >= .75 ? 'lv-solid' : o.ok / o.n >= .5 ? 'lv-mid' : 'lv-weak'}">${o.ok}/${o.n}</span></div>`).join('')}` : ''}
       <h3 class="sh">Every question</h3>
       ${r.items.map(x => { const q = Q.get(x.id); return `<details class="rv"><summary><span class="chip ${x.ok ? 'good' : 'bad'}">${x.ok ? 'Right' : 'Missed'}</span><span class="grow small">${qtag(q)} · ${snippet(q)}</span></summary>
-        <div class="stem">${paras(q.stem)}</div>${q.opts ? `<div class="opts">${q.opts.map((o, k) => `<div class="opt ${k === q.ans ? 'right' : x.pick === k ? 'wrong' : ''}"><span class="ol">${'ABC'[k]}</span><span>${inl(o)}</span></div>`).join('')}</div>` : ''}<div class="sol">${paras(q.sol)}</div><p class="src">Source: ${esc(src(q))}</p></details>`; }).join('')}
+        <div class="stem">${paras(q.stem)}</div>${q.opts ? `<div class="opts">${q.opts.map((o, k) => `<div class="opt ${k === q.ans ? 'right' : x.pick === k ? 'wrong' : ''}"><span class="ol">${'ABC'[k]}</span><span>${inl(o)}</span></div>`).join('')}</div>` : ''}<div class="sol">${paras(q.sol)}</div>${askBox(x.id)}<p class="src">Source: ${esc(src(q))}</p></details>`; }).join('')}
       <div class="qfoot">${r.items.some(x => !x.ok) ? `<button class="btn" data-act="redo-result">Retry the ${r.items.filter(x => !x.ok).length} missed</button>` : ''}${r.mid ? `<button class="btn ghost" data-quiz="${r.mid}" data-mode="${r.mode}">Retake</button><button class="btn ghost" data-mod="${r.mid}">Back to the module</button>` : ''}<button class="btn ghost" data-view="home">Home</button></div></section>`;
   }
 
@@ -1835,6 +1836,42 @@ window.CFA_CASES = [
       ${items.length ? `<ul class="list">${items.slice(0, 150).map(([id, c]) => { const q = Q.get(id), m = MOD.get(q.m), n = S.prog.notes[id] || {};
         return `<li>${n.tag ? `<span class="chip bad">${T[n.tag]}</span>` : c.ok ? '<span class="chip mid">Guessed</span>' : '<span class="chip">Untagged</span>'}<div class="grow"><b>${esc(topicName(m))} · LM ${m.num} · ${qtag(q)}</b><div class="clip">${n.text ? esc(n.text) : snippet(q)}</div></div><span class="small muted">${fmtDate(c.last)}</span></li>`; }).join('')}</ul>`
         : `<p class="empty">No misses logged${S.nb.topic || S.nb.tag ? ' for this filter' : ' yet'}. Misses and guesses land here after each session.</p>`}</section>`;
+  }
+
+  // ---------- Ask Claude ----------
+  // On claude.ai the page may ask Claude (the viewer's own account, after their consent) to explain a question.
+  // Hidden wherever the sample capability isn't available; answers are kept for this page load only.
+  const ASK_OFF = ['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'];
+  const plain = list => list.map(p => p.replace(/\[\[img:[^\]]+\]\]/g, '[exhibit not shown]')).join('\n');
+  function askBox(id) {
+    if (!S.sample || S.askOff) return '';
+    const a = S.askAns[id];
+    return `<div class="ask"><div class="askrow"><input id="ask-${esc(id)}" class="txt" placeholder="Ask Claude about this question, or leave blank for an explanation"><button class="btn sm" data-act="ask" data-id="${esc(id)}">Ask Claude</button></div>
+      <div class="askout" id="askout-${esc(id)}" ${a ? '' : 'hidden'}>${a ? esc(a) : ''}</div></div>`;
+  }
+  async function ask(id, pick) {
+    const q = Q.get(id), set = q.set && SET.get(q.set), box = document.getElementById('ask-' + id), out = document.getElementById('askout-' + id), btn = document.querySelector(`[data-act="ask"][data-id="${id}"]`);
+    if (!q || !out || S.asking) return;
+    const L = 'ABC', mine = pick == null ? null : pick, extra = box ? box.value.trim() : '';
+    const prompt = ['You are a concise CFA Level I tutor. A candidate is reviewing the practice question below.',
+      `Explain in plain text, under 200 words and without headings or markdown, why ${q.opts ? 'the correct answer is right' : 'the solution works'}${q.opts && mine != null && mine !== q.ans ? ` and where their pick (${L[mine]}) goes wrong` : ''}. End with one short tip for spotting this on the exam. If they asked a specific question, answer that first. Stick to the 2027 CFA Level I curriculum; if a figure is in an exhibit you can't see, say what you'd need from it.`,
+      set ? 'Case:\n' + plain(set.text).slice(0, 5000) : '',
+      'Question:\n' + plain(q.stem),
+      q.opts ? 'Options:\n' + q.opts.map((o, k) => `${L[k]}. ${plain([o])}`).join('\n') + `\nCorrect answer: ${L[q.ans]}` : '',
+      q.opts && mine != null ? `Candidate's answer: ${L[mine]}` : '',
+      'Worked solution:\n' + plain(q.sol).slice(0, 4000),
+      extra ? "Candidate's question: " + extra.slice(0, 1000) : ''].filter(Boolean).join('\n\n');
+    S.asking = true; if (btn) btn.disabled = true;
+    out.hidden = false; out.textContent = 'Thinking…';
+    try {
+      const { text, truncated } = await S.sample(prompt, { onText: ({ text: t }) => { out.textContent = t; } });
+      S.askAns[id] = text + (truncated ? '\n\n(Cut short.)' : '');
+      out.textContent = S.askAns[id];
+    } catch (e) {
+      if (e && ASK_OFF.includes(e.code)) { S.askOff = true; out.textContent = "Ask Claude is off for this page. You can allow it from the artifact's permissions menu."; }
+      else out.textContent = (e && e.text ? e.text + '\n\n' : '') + (e && e.code === 'rate_limited' ? 'Too many questions right now. Try again in a little while.' : e && e.code === 'cancelled' ? '' : "Claude couldn't answer just now. Try again.");
+    }
+    S.asking = false; if (btn) btn.disabled = false;
   }
 
   // ---------- render ----------
@@ -1931,6 +1968,7 @@ window.CFA_CASES = [
     else if (a === 'fc-topic') startRun(genOrder(FLASH_BY_TOPIC[d.id]), 'Formula cards · ' + TOP.get(d.id).name, { keep: true });
     else if (a === 'case-all') startRun(genOrder([...CASES.keys()]), 'Ethics casebook', { keep: true });
     else if (a === 'case-std') startRun(genOrder([...CASES.keys()].filter(id => CASES.get(id).title === d.id)), 'Casebook · ' + d.id, { keep: true });
+    else if (a === 'ask') { const R = S.run, fromRun = R && R.ids[R.i] === d.id, x = !fromRun && S.result && S.result.items.find(i => i.id === d.id); ask(d.id, fromRun ? (R.ans[d.id] || {}).pick : x ? x.pick : null); }
     else if (a === 'nb-drill') startRun(nbItems().map(([id]) => id), 'Error notebook drill');
     else if (a === 'reveal') { S.run.revealed = true; render(); }
     else if (a === 'next') next();
@@ -1959,6 +1997,7 @@ window.CFA_CASES = [
     if (t.id === 'nb-tag') { S.nb.tag = t.value; render(); }
   });
   document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.id && e.target.id.startsWith('ask-')) { e.preventDefault(); ask(e.target.id.slice(4), S.run && S.run.ids[S.run.i] === e.target.id.slice(4) ? (S.run.ans[S.run.ids[S.run.i]] || {}).pick : ((S.result && S.result.items.find(i => i.id === e.target.id.slice(4))) || {}).pick); return; }
     if (S.view !== 'run' || !S.run || (e.target.matches && e.target.matches('textarea,input,select')) || e.ctrlKey || e.metaKey || e.altKey) return;
     const R = S.run, q = Q.get(R.ids[R.i]), k = e.key.toLowerCase(), a = R.ans[R.ids[R.i]] || {};
     const pick = i => { R.ans[R.ids[R.i]] = Object.assign(a, { pick: i }); render(); };
@@ -1980,6 +2019,7 @@ window.CFA_CASES = [
   if (TABS[h]) S.view = h;
   render();
   connect();
+  if (window.claude && typeof window.claude.use === 'function') window.claude.use('sample').then(fn => { S.sample = fn || null; if (fn && !S.run) render(); }, () => {});
 })();
 
 </script>
