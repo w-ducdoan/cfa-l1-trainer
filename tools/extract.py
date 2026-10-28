@@ -318,7 +318,7 @@ def extract_los(vol, p0):
             if mode is None or t in ('Mastery',) or t.lower().startswith('the candidate should be able to'): continue
             if col is not None and not (col - 4 <= z.x0 <= col + 26): continue  # sidebar or margin text
             if t.upper() == 'INTRODUCTION' or re.fullmatch(r'\d+', t) or (t.isupper() and len(t) > 6):
-                if mode == "ov": return list(dict.fromkeys(x for x in los if x[:1].islower() and len(x) > 15)), [x for x in ov if x]
+                if mode == "ov": return list(dict.fromkeys(x for x in los if x[:1].islower() and len(x) > 15)), [x for x in ov if len(x) > 40 and x[:1].isupper() and '_' not in x]
                 mode = None; continue
             # wrapped lines overlap the line above; a new bullet starts at or below the previous line's bottom
             fresh = prev is None or prev.page != z.page or z.y0 - prev.y1 > -1 or col is None
@@ -330,7 +330,7 @@ def extract_los(vol, p0):
                 target.append(t.lstrip(mark + ' ').strip())
             else:
                 target[-1] = vol.join(target[-1], t)
-    return list(dict.fromkeys(x for x in los if x[:1].islower() and len(x) > 15)), [x for x in ov if x]
+    return list(dict.fromkeys(x for x in los if x[:1].islower() and len(x) > 15)), [x for x in ov if len(x) > 40 and x[:1].isupper() and '_' not in x]
 
 
 def extract_volume(num, tkey):

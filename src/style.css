@@ -187,6 +187,28 @@ svg.act{width:100%;height:auto;display:block}
 .tpart{font-family:var(--display);font-weight:300;font-size:1.45rem;margin:22px 0 4px;padding-bottom:6px;border-bottom:1px solid var(--steel);display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
 .tpart small{font-family:var(--sans);font-size:.8rem;color:var(--muted)}
 
+/* lessons */
+.lesson>p,.lesson>ul,.lesson>ol,.lesson>.formula,.lesson>.warn,.lesson>.tip,.lesson>dl{max-width:72ch}
+.lesson h3.sh{max-width:72ch}
+.lesson ul{padding-left:1.2em}.lesson li{margin:.3em 0}
+.take span{display:block;font-family:var(--sans);font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:var(--steel);font-weight:700;margin-bottom:4px}
+.formula{font-family:var(--display);font-size:1.05rem;background:var(--beige);padding:.7em 1em;overflow-x:auto;max-width:100%;line-height:1.7;margin:10px 0}
+.warn{background:var(--gold-soft);border-left:3px solid var(--orange);padding:9px 13px;margin:10px 0}
+.tip{background:var(--steel-soft);border-left:3px solid var(--steel);padding:9px 13px;margin:10px 0}
+.warn ul,.tip ul{margin:0;padding-left:1.1em}.warn li,.tip li{margin:.25em 0}
+dl.terms{display:grid;grid-template-columns:minmax(120px,max-content) minmax(0,1fr);gap:0;margin:10px 0;border-top:1px solid var(--line)}
+dl.terms dt{font-weight:700;padding:7px 14px 7px 0;border-bottom:1px solid var(--line)}
+dl.terms dd{margin:0;padding:7px 0;border-bottom:1px solid var(--line)}
+.tw{overflow-x:auto;max-width:100%;margin:12px 0}
+table.fin{border-collapse:collapse;font-size:.9rem;min-width:min(100%,520px)}
+table.fin th,table.fin td{border-bottom:1px solid var(--line);padding:6px 11px;text-align:left;vertical-align:top}
+table.fin thead th{font-weight:700;border-bottom:1.5px solid var(--ink)}
+table.fin td.n{text-align:right;white-space:nowrap}
+code{font-family:var(--mono);font-size:.86em;background:var(--surface2);padding:.05em .35em}
+.losbox{margin:6px 0 4px}.losbox ul{font-size:.92rem;color:var(--muted)}
+.check{margin:14px 0 18px;max-width:74ch}.check>p{margin:0 0 8px}
+button.mt:disabled{cursor:default;color:var(--muted)}
+
 /* questions */
 .qwrap{display:grid;gap:18px}
 .qwrap.split{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
@@ -254,5 +276,6 @@ details.rv summary::-webkit-details-marker{display:none}
   .qlrow{grid-template-columns:28px minmax(0,1fr) 60px}.qlrow .st{display:none}.qlrow .acts{grid-column:2/-1;justify-content:flex-start}
   .qwrap.split{grid-template-columns:1fr}.vign{position:static;max-height:52vh;border-bottom:1px solid var(--line)}
   .src{max-width:100%}
+  dl.terms{grid-template-columns:1fr}dl.terms dt{border-bottom:0;padding-bottom:0}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

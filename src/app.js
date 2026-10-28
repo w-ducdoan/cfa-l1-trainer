@@ -24,10 +24,13 @@
 
   // ---------- progress ----------
   // cards[qid] = { due, ivl, ease, reps, lapses, last, ok, conf, h: [[t, ok, conf, secs]] }
-  const blank = () => ({ v: 2, updated: 0, cards: {}, notes: {}, daily: {}, los: {}, quizzes: {}, xp: 0, settings: { exam: '', newPerDay: 15, planStart: '' } });
+  const blank = () => ({ v: 2, updated: 0, cards: {}, notes: {}, daily: {}, los: {}, quizzes: {}, lessons: {}, xp: 0, settings: { exam: '', newPerDay: 15, planStart: '' } });
   const S = { view: 'home', prog: Object.assign(blank(), lsGet(LS_KEY) || {}), sync: 'local', refs: null, run: null, result: null, mod: null, sel: null, nb: { topic: '', tag: '' } };
   S.prog.settings = Object.assign(blank().settings, S.prog.settings);
   if (!S.prog.quizzes) S.prog.quizzes = {};
+  if (!S.prog.lessons) S.prog.lessons = {};
+  const LES = B.lessons || {};
+  const hasLesson = mid => !!LES[mid];
   if (!S.prog.settings.planStart) { S.prog.settings.planStart = dayKey(); lsSet(LS_KEY, S.prog); }
 
   // A reserved question stays out of practice until Phase C mocks use it, unless it was already answered.
@@ -47,6 +50,7 @@
       const seen = new Map((out.quizzes[k] || []).map(x => [x.t, x])); list.forEach(x => seen.set(x.t, x));
       out.quizzes[k] = [...seen.values()].sort((x, y) => x.t - y.t).slice(-12);
     }
+    for (const src of [a.lessons || {}, b.lessons || {}]) for (const [k, l] of Object.entries(src)) if (!out.lessons[k] || (l.ok || 0) > (out.lessons[k].ok || 0) || ((l.ok || 0) === (out.lessons[k].ok || 0) && l.t > out.lessons[k].t)) out.lessons[k] = l;
     out.xp = Math.max(a.xp || 0, b.xp || 0);
     out.updated = Math.max(a.updated || 0, b.updated || 0);
     return out;
@@ -70,7 +74,7 @@
     try {
       const todo = [...dirty]; dirty.clear();
       for (const t of todo) {
-        if (t === '_meta') await S.refs.meta.set({ settings: S.prog.settings, daily: S.prog.daily, notes: S.prog.notes, los: S.prog.los, quizzes: S.prog.quizzes, xp: S.prog.xp, updated: S.prog.updated });
+        if (t === '_meta') await S.refs.meta.set({ settings: S.prog.settings, daily: S.prog.daily, notes: S.prog.notes, los: S.prog.los, quizzes: S.prog.quizzes, lessons: S.prog.lessons, xp: S.prog.xp, updated: S.prog.updated });
         else await S.refs.col.doc('cards-' + t).set({ cards: cardsOf(t) });
       }
       setSync('synced');
@@ -90,7 +94,7 @@
       const refs = { col, meta: col.doc('meta') };
       const remote = blank();
       const m = await refs.meta.get();
-      if (m.exists && m.data()) { const d = m.data(); Object.assign(remote, { settings: d.settings || remote.settings, daily: d.daily || {}, notes: d.notes || {}, los: d.los || {}, quizzes: d.quizzes || {}, xp: d.xp || 0, updated: d.updated || 0 }); }
+      if (m.exists && m.data()) { const d = m.data(); Object.assign(remote, { settings: d.settings || remote.settings, daily: d.daily || {}, notes: d.notes || {}, los: d.los || {}, quizzes: d.quizzes || {}, lessons: d.lessons || {}, xp: d.xp || 0, updated: d.updated || 0 }); }
       for (const t of B.topics) {
         const d = await col.doc('cards-' + t.id).get();
         if (d.exists && d.data() && d.data().cards) Object.assign(remote.cards, d.data().cards);
@@ -262,7 +266,7 @@
   }
 
   // ---------- views ----------
-  const TABS = { home: 'Home', plan: 'Study plan', map: 'Mastery map', quizzes: 'Module quizzes', review: 'Daily review', notebook: 'Error notebook' };
+  const TABS = { home: 'Home', plan: 'Study plan', lessons: 'Lessons', map: 'Mastery map', quizzes: 'Module quizzes', review: 'Daily review', notebook: 'Error notebook' };
   function setView(v) { S.view = v; if (TABS[v]) { try { history.replaceState(null, '', '#' + v); } catch (e) { /* sandboxed */ } } render(); window.scrollTo(0, 0); }
 
   function masthead() {
@@ -273,7 +277,7 @@
       <div class="topr"><div class="eyebrow">${ex ? fmtDate(examDay(), { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : 'May 2027 window · date assumed'}</div>
         <div class="cdbig">${daysLeft()} days to go</div>
         <div class="row" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><span class="lvl">Level ${lv.L} · ${comma(lv.xp)} XP</span><span class="sync" id="sync" data-state="${S.sync}">${SYNC_TXT[S.sync]}</span></div></div></header>
-      <nav class="tabs">${Object.entries(TABS).map(([k, l]) => `<button class="tab ${S.view === k || (k === 'quizzes' && S.view === 'module') ? 'on' : ''}" data-view="${k}">${l}${k === 'review' && due ? `<span class="n">${due}</span>` : ''}</button>`).join('')}</nav>`;
+      <nav class="tabs">${Object.entries(TABS).map(([k, l]) => `<button class="tab ${S.view === k || (k === 'quizzes' && S.view === 'module') || (k === 'lessons' && S.view === 'lesson') ? 'on' : ''}" data-view="${k}">${l}${k === 'review' && due ? `<span class="n">${due}</span>` : ''}</button>`).join('')}</nav>`;
   }
 
   function ring(v, label) {
@@ -310,7 +314,7 @@
       <h3>How to stay on plan</h3>
       <div class="flow">
         <div class="fcol"><div class="fh"><b>Learn:</b> this week's modules</div>
-          ${(p.late.length ? p.late.slice(0, 2) : []).concat(week.mods).slice(0, 4).map(m => `<button class="fbox f-navy ${modStats(m).passed ? 'done' : ''}" data-mod="${m.id}">LM ${m.num} · ${esc(m.title)}<small>${esc(topicName(m))}${p.late.includes(m) ? ' · carried over' : ''}${modStats(m).passed ? ' · passed' : ''}</small></button>`).join('') || `<button class="fbox f-navy" data-view="plan">Open the study plan<small>${week.phase === 'pass' ? 'No modules scheduled this week' : 'First pass is finished'}</small></button>`}
+          ${(p.late.length ? p.late.slice(0, 2) : []).concat(week.mods).slice(0, 4).map(m => `<button class="fbox f-navy ${modStats(m).passed ? 'done' : ''}" ${hasLesson(m.id) ? `data-lesson="${m.id}"` : `data-mod="${m.id}"`}>LM ${m.num} · ${esc(m.title)}<small>${esc(topicName(m))}${hasLesson(m.id) ? (S.prog.lessons[m.id] ? ' · lesson read' : ' · lesson + quiz') : ''}${p.late.includes(m) ? ' · carried over' : ''}${modStats(m).passed ? ' · passed' : ''}</small></button>`).join('') || `<button class="fbox f-navy" data-view="plan">Open the study plan<small>${week.phase === 'pass' ? 'No modules scheduled this week' : 'First pass is finished'}</small></button>`}
           ${week.mods.length > 4 ? `<button class="link" data-view="plan">+ ${week.mods.length - 4} more this week</button>` : ''}</div>
         <div class="fcol"><div class="fh"><b>Practice:</b> keep it fresh</div>
           <button class="fbox f-steel" data-act="review">Daily review<small>${due} due · ${leftNew} new today</small></button>
@@ -373,7 +377,7 @@
       const mods = isNow ? [...p.late, ...w.mods] : w.mods;
       const hrs = Math.round(mods.reduce((a, m) => a + Math.max(4, m.pages[1] - m.pages[0] + 1), 0) / p.total * HOURS);
       html += `<div class="week ${isNow ? 'now' : ''} ${past ? 'past' : ''}"><div class="wd"><b>${isNow ? 'This week' : 'Week ' + (i + 1)}</b>${fmtDate(w.t)} – ${fmtDate(w.t + 6 * DAY)}</div><div>`;
-      if (w.phase === 'pass') html += mods.length ? `<div class="wmods">${mods.map(m => { const s = modStats(m), late = isNow && p.late.includes(m); return `<button class="wmod ${s.passed ? 'pass' : s.quiz.length ? 'tried' : ''} ${late ? 'late' : ''}" data-mod="${m.id}"><i>${esc(TOP.get(m.topic).id.toUpperCase())} ${m.num}</i>${esc(m.title)}${s.passed ? ' ✓' : ''}</button>`; }).join('')}</div>` : '<span class="wnote muted">Catch-up week</span>';
+      if (w.phase === 'pass') html += mods.length ? `<div class="wmods">${mods.map(m => { const s = modStats(m), late = isNow && p.late.includes(m); return `<button class="wmod ${s.passed ? 'pass' : s.quiz.length ? 'tried' : ''} ${late ? 'late' : ''}" ${hasLesson(m.id) ? `data-lesson="${m.id}"` : `data-mod="${m.id}"`}><i>${esc(TOP.get(m.topic).id.toUpperCase())} ${m.num}</i>${esc(m.title)}${s.passed ? ' ✓' : ''}</button>`; }).join('')}</div>` : '<span class="wnote muted">Catch-up week</span>';
       else html += `<span class="wnote">${notes[w.phase](pi)}</span>`;
       html += `</div><div class="wh">${w.phase === 'pass' ? `≈ ${hrs} h${isNow && p.late.length ? '<br>incl. carry-over' : ''}` : ''}</div></div>`;
       pi++;
@@ -429,12 +433,60 @@
     return `<section class="page"><div class="crumbs"><button class="link" data-view="quizzes">← All modules</button><span class="muted">${esc(t.name)} · Vol. ${t.vol}</span></div>
       <div class="lbl">Learning Module ${m.num}</div><h2>${esc(m.title)}</h2>
       <p class="take">${s.passed ? `Passed with a best of ${pct(s.best)}.` : s.quiz.length ? `Best so far ${pct(s.best)}. Pass mark is 70%.` : `${s.n} questions. Read the module, then take the quiz.`}</p>
-      <div class="qfoot">${s.n ? `<button class="btn big" data-quiz="${m.id}" data-mode="practice">Practice quiz</button><button class="btn big ghost" data-quiz="${m.id}" data-mode="exam">Timed quiz · ${fmtSecs(modQs(m).filter(id => Q.get(id).opts).length * PACE)}</button>` : ''}${s.weak ? `<button class="btn ghost" data-act="mod-weak" data-id="${m.id}">Weak spots only (${s.weak})</button>` : ''}</div>
+      <div class="qfoot">${hasLesson(m.id) ? `<button class="btn big" data-lesson="${m.id}">${S.prog.lessons[m.id] ? 'Review the lesson' : 'Read the lesson'}</button>` : ''}${s.n ? `<button class="btn big ${hasLesson(m.id) ? 'ghost' : ''}" data-quiz="${m.id}" data-mode="practice">Practice quiz</button><button class="btn big ghost" data-quiz="${m.id}" data-mode="exam">Timed quiz · ${fmtSecs(modQs(m).filter(id => Q.get(id).opts).length * PACE)}</button>` : ''}${s.weak ? `<button class="btn ghost" data-act="mod-weak" data-id="${m.id}">Weak spots only (${s.weak})</button>` : ''}</div>
       ${m.overview.length ? `<h3 class="sh">Module overview</h3><ul class="ovw">${m.overview.map(o => `<li>${esc(o)}</li>`).join('')}</ul>` : ''}
       <h3 class="sh">Learning outcomes</h3>
       <ul class="loslist">${m.los.map((l, i) => { const x = s.losS[i]; return `<li><span class="blk s${x.s} ${x.nq ? 'nq' : ''} ${x.ck ? 'ck' : ''}"></span><span>${esc(l)}</span><label class="small"><input type="checkbox" data-losck="${m.id}:${i}" ${x.ck ? 'checked' : ''}> Can do</label></li>`; }).join('') || '<li><span></span><span class="muted">The curriculum lists no outcomes for this module.</span><span></span></li>'}</ul>
       ${s.quiz.length ? `<h3 class="sh">Quiz history</h3><ul class="list">${s.quiz.slice().reverse().map(x => `<li><span class="chip ${x.ok / x.n >= PASS ? 'good' : 'mid'}">${pct(x.ok / x.n)}</span><span class="grow">${x.ok} of ${x.n} · ${x.mode === 'exam' ? 'timed' : 'practice'} · ${fmtSecs(x.secs)}</span><span class="small muted">${fmtDate(x.t)}</span></li>`).join('')}</ul>` : ''}
       <p class="src">Source: CFA Program Curriculum 2027, Level I, Vol. ${t.vol} ${esc(t.name)}, Learning Module ${m.num}, pp. ${m.pages[0]}–${m.pages[1]} of the volume PDF. Overview and outcomes quoted from the module's opening pages.</p></section>`;
+  }
+
+  // ---------- lessons ----------
+  function vLessons() {
+    const total = Object.keys(LES).length, read = Object.keys(S.prog.lessons).filter(k => LES[k]).length;
+    return `<section class="page"><h2>Lessons</h2><p class="sub">One lesson per module: the exam takeaway, the idea in plain English, the formulas, a worked example, the traps, and a quick check. ${total} written so far; the rest are on the way.</p>
+      <div class="glance"><div class="glh">Lessons</div><div class="glrow" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><b>${read}<small>/${total}</small></b><span>Lessons read</span></div>
+        <div><b>${Object.values(S.prog.lessons).reduce((a, l) => a + l.ok, 0)}<small>/${Object.values(S.prog.lessons).reduce((a, l) => a + l.n, 0)}</small></b><span>Quick-check answers right</span></div>
+        <div><b>${B.topics.filter(t => t.modules.some(hasLesson)).length}<small>/10</small></b><span>Topics with lessons</span></div></div></div>
+      ${[...B.topics].sort((a, b) => (b.modules.some(hasLesson) - a.modules.some(hasLesson)) || (b.w - a.w)).map(t => {
+        const ms = t.modules.map(id => MOD.get(id)).filter(m => STUDY.includes(m)), n = ms.filter(m => hasLesson(m.id)).length;
+        return `<div class="tpart">${esc(t.name)}<small>${n ? `${ms.filter(m => S.prog.lessons[m.id]).length} of ${n} read` : 'Lessons coming in a later update'}</small></div>
+          ${n ? ms.map(m => { const l = LES[m.id], done = S.prog.lessons[m.id]; return `<div class="qlrow" style="grid-template-columns:34px minmax(0,1fr) 90px auto"><span class="mn">${m.num}</span>
+            <button class="mt" ${l ? `data-lesson="${m.id}"` : 'disabled'}>${esc(m.title)}<small>${l ? `${l.mins} min · ${l.checks.length} check questions` : 'Lesson coming'}</small></button>
+            <span class="sc">${done ? `<span class="chip good">${done.ok}/${done.n}</span>` : l ? '<span class="chip">New</span>' : ''}</span>
+            <span class="acts">${l ? `<button class="btn sm ${done ? 'ghost' : ''}" data-lesson="${m.id}">${done ? 'Review' : 'Read'}</button>` : ''}</span></div>`; }).join('') : ''}`;
+      }).join('')}
+      <p class="src">Lessons are written for this trainer from the CFA Program Curriculum 2027, Level I, in plain language. Quick-check questions are original, not from the curriculum; the module quizzes use the curriculum's own questions.</p></section>`;
+  }
+  function openLesson(mid) { S.les = mid; S.lc = { mid, picks: {} }; setView('lesson'); }
+  function lessonPick(v) {
+    const [i, k] = v.split(':').map(Number), L = LES[S.les];
+    if (S.lc.picks[i] != null) return;
+    S.lc.picks[i] = k;
+    if (Object.keys(S.lc.picks).length === L.checks.length) {
+      const ok = L.checks.filter((c, j) => S.lc.picks[j] === c.a).length, first = !S.prog.lessons[S.les];
+      S.prog.lessons[S.les] = { t: Date.now(), ok, n: L.checks.length };
+      if (first) { S.prog.xp = (S.prog.xp || 0) + 15; toast(`Lesson done: ${ok} of ${L.checks.length} right · +15 XP`); }
+      save();
+    }
+    render();
+    const el = document.getElementById('chk-' + i); if (el) el.scrollIntoView({ block: 'nearest' });
+  }
+  function vLesson() {
+    const m = MOD.get(S.les), t = TOP.get(m.topic), L = LES[S.les], s = modStats(m), done = S.prog.lessons[S.les];
+    const idx = t.modules.indexOf(m.id), next = t.modules.slice(idx + 1).map(id => MOD.get(id)).find(x => STUDY.includes(x));
+    const all = Object.keys(S.lc.picks).length === L.checks.length;
+    return `<section class="page lesson"><div class="crumbs"><button class="link" data-view="lessons">← All lessons</button><span class="muted">${esc(t.name)} · Vol. ${t.vol} · ${L.mins} min</span></div>
+      <div class="lbl">Lesson · Learning Module ${m.num}</div><h2>${esc(m.title)}</h2>
+      <div class="take"><span>Exam takeaway</span>${L.take}</div>
+      ${m.los.length ? `<details class="losbox"><summary class="link">What the curriculum says you must be able to do (${m.los.length})</summary><ul>${m.los.map(l => `<li>${esc(l)}</li>`).join('')}</ul></details>` : ''}
+      ${L.html}
+      <h3 class="sh">Quick check</h3><p class="small muted">Pick an answer to see whether it's right and why. These are written for the trainer.</p>
+      ${L.checks.map((c, i) => { const p = S.lc.picks[i]; return `<div class="check" id="chk-${i}"><p><b>${i + 1}.</b> ${c.q}</p><div class="opts">${c.o.map((o, k) => `<button class="opt ${p == null ? '' : k === c.a ? 'right' : p === k ? 'wrong' : ''}" data-lc="${i}:${k}" ${p == null ? '' : 'disabled'}><span class="dotsel"></span><span class="ol">${'ABC'[k]}</span><span>${o}</span></button>`).join('')}</div>
+        ${p == null ? '' : `<div class="fb ${p === c.a ? 'ok' : 'no'}"><b>${p === c.a ? 'Right.' : `Not quite: it's ${'ABC'[c.a]}.`}</b> ${c.why}</div>`}</div>`; }).join('')}
+      ${all || done ? `<div class="status ok"><b>${all ? `${L.checks.filter((c, j) => S.lc.picks[j] === c.a).length} of ${L.checks.length} right.` : `Read before: ${done.ok} of ${done.n} right.`}</b> Next, test it on the curriculum's own questions.</div>` : ''}
+      <div class="qfoot">${s.n ? `<button class="btn big" data-quiz="${m.id}" data-mode="practice">Module quiz · ${s.n} questions</button><button class="btn ghost" data-quiz="${m.id}" data-mode="exam">Timed</button>` : ''}${next ? `<button class="btn ghost" ${hasLesson(next.id) ? `data-lesson="${next.id}"` : `data-mod="${next.id}"`}>Next: LM ${next.num}</button>` : ''}</div>
+      <p class="src">Written for this trainer from the CFA Program Curriculum 2027, Level I, Vol. ${t.vol} ${esc(t.name)}, Learning Module ${m.num} (PDF pp. ${m.pages[0]}–${m.pages[1]}), in plain language. Worked examples and quick-check questions are original.</p></section>`;
   }
 
   // ---------- question runner ----------
@@ -527,7 +579,8 @@
     if (S.view === 'run' && S.run) body = vRun();
     else if (S.view === 'results') body = vResults();
     else if (S.view === 'module' && S.mod) body = vModule();
-    else body = ({ plan: vPlan, map: vMap, quizzes: vQuizzes, review: vReview, notebook: vNotebook }[S.view] || vHome)();
+    else if (S.view === 'lesson' && S.les) body = vLesson();
+    else body = ({ plan: vPlan, lessons: vLessons, map: vMap, quizzes: vQuizzes, review: vReview, notebook: vNotebook }[S.view] || vHome)();
     root.innerHTML = masthead() + `<main id="main">${body}</main>`;
     fillImages(root);
     clearInterval(ticker);
@@ -578,13 +631,15 @@
   const weakIds = ids => ids.filter(i => S.prog.cards[i] && (!S.prog.cards[i].ok || S.prog.cards[i].conf === 2));
 
   document.addEventListener('click', e => {
-    const el = e.target.closest('[data-view],[data-act],[data-pick],[data-conf],[data-self],[data-tag],[data-mod],[data-quiz],[data-los],[data-go]');
+    const el = e.target.closest('[data-view],[data-act],[data-pick],[data-conf],[data-self],[data-tag],[data-mod],[data-quiz],[data-los],[data-go],[data-lesson],[data-lc]');
     if (!el) return;
     const d = el.dataset;
     if (d.view) { if (S.run && !confirmLeave()) return; S.run = null; setView(d.view); return; }
     if (d.quiz) { startQuiz(d.quiz, d.mode); return; }
     if (d.mod) { if (S.run && !confirmLeave()) return; S.run = null; S.mod = d.mod; setView('module'); return; }
     if (d.los) { S.sel = S.sel === d.los ? null : d.los; render(); return; }
+    if (d.lesson) { if (S.run && !confirmLeave()) return; S.run = null; openLesson(d.lesson); return; }
+    if (d.lc) { lessonPick(d.lc); return; }
     if (d.go != null) { go(+d.go); return; }
     if (d.pick != null && S.run) { const id = S.run.ids[S.run.i]; if (S.run.mode === 'practice' && S.run.revealed) return; S.run.ans[id] = Object.assign(S.run.ans[id] || {}, { pick: +d.pick }); render(); return; }
     if (d.conf != null) { lockIn(+d.conf); return; }

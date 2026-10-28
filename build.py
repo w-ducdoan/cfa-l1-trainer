@@ -16,6 +16,16 @@ src, data, dist = here / 'src', here / 'data', here / 'dist'
 for old in list(dist.glob('*.js')) + list((dist / 'img').glob('*.js')): old.unlink()
 
 bank = json.loads((data / 'bank.json').read_text(encoding='utf-8'))
+
+# lessons: original writing in lessons/<topic>.md, parsed into HTML here
+import sys
+sys.path.insert(0, str(here / 'tools'))
+import lessons as lessons_md
+bank['lessons'] = {}
+for f in sorted((here / 'lessons').glob('*.md')):
+    bank['lessons'].update(lessons_md.parse(f.read_text(encoding='utf-8')))
+unknown = [k for k in bank['lessons'] if k not in {m['id'] for m in bank['modules']}]
+if unknown: raise SystemExit(f'lessons for unknown modules: {unknown}')
 inline_json = lambda obj: json.dumps(obj, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
 bank_js = 'window.CFA_BANK=' + inline_json(bank) + ';'
 
@@ -49,5 +59,6 @@ def body(extra=''):
     + '</head>\n<body>\n' + body('window.CFA_IMG=' + inline_json(all_imgs) + ';\n') + '</body>\n</html>\n', encoding='utf-8')
 
 size = lambda p: f'{p.stat().st_size / 1e6:.1f} MB'
+print(f'lessons: {len(bank["lessons"])} ({sum(len(l["checks"]) for l in bank["lessons"].values())} quick-check questions)')
 print('built dist/: page.html', size(dist / 'page.html'), '| index.html', size(dist / 'index.html'),
       '| image packs', ', '.join(f'{t} {size(dist / "img" / (t + ".json"))}' for t in packs))
