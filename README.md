@@ -23,7 +23,7 @@ Private prep site for the CFA Level I exam (May 2027 window), built from the off
 | Module quizzes | Every module's end-of-chapter questions in practice mode (solution after each answer) or timed mode (1:30 a question, navigator, flags, results at the end). Pass mark 70%. Each module has its own page with overview, outcomes and quiz history. |
 | Exams | **Full mocks**: 180 questions in two timed sessions of 90 (2h15 each) with a break; weighted by exam weight; held-back questions first, then never-answered, then generated calculations, then longest-unseen; standalone questions first, item-set questions (with their case) fill short topics such as Derivatives. Pause any time: the run and clock are saved in the browser (`cfa-l1-mock-run`). **Topic tests**: up to 30 questions per topic at 1:30 each, spread across modules, never using the mock reserve. Results break down by topic or module against a 70% rule-of-thumb line. |
 | Analytics | Projected score with a 95% sample-size range (latest mock, else exam-weighted accuracy in topics with 10+ answers), accuracy and pace by topic, confidence check (right when sure/unsure/guess), timed-score history, reasons for misses, weekly practice time. |
-| Drills | **Calculation drills**: 41 formula templates across nine topics (`src/gen.js`) that make a fresh three-option question with new numbers each time. Wrong options come from the usual slips. Each template is one spaced-repetition card (`v<vol>g-<key>`) that also shows up in the daily review; mixed, timed and per-topic sets, weakest formulas first. |
+| Drills | **Calculation drills**: 41 formula templates across nine topics (`src/gen.js`) that make a fresh three-option question with new numbers each time. Wrong options come from the usual slips. Each template is one spaced-repetition card (`v<vol>g-<key>`) that also shows up in the daily review; mixed, timed and per-topic sets, weakest formulas first. **Formula flashcards**: 97 self-graded cards (`src/cards.js`, ids `v<vol>f-<key>`) on the same schedule, learned in study-plan order; each topic opens as a formula sheet. |
 | Daily review | Spaced repetition: due reviews plus new questions from this week's modules. |
 | Error notebook | Misses and lucky guesses, tagged concept / calculation / misread. |
 
@@ -32,7 +32,7 @@ Private prep site for the CFA Level I exam (May 2027 window), built from the off
 | Question bank: questions, options, answer key, curriculum solutions, item sets, printed page, matched LOS, mock reserve flag; LOS and module overviews | `data/bank.json` |
 | Exhibits, tables and equations clipped from the PDFs | `data/img/*.png` |
 | Extraction warnings to check by hand | `data/report.txt` |
-| App | `src/app.js`, `src/style.css`; calculation generators in `src/gen.js` (inlined ahead of `app.js`) |
+| App | `src/app.js`, `src/style.css`; calculation generators in `src/gen.js` and formula cards in `src/cards.js` (both inlined ahead of `app.js`) |
 | Built site | `dist/` |
 
 ## Rebuild
@@ -48,7 +48,7 @@ Private prep site for the CFA Level I exam (May 2027 window), built from the off
 - **Scheduling:** each answer is locked in as sure, unsure or guess. A miss returns tomorrow (and once more in the same daily review); a sure answer spaces out fastest; a right guess is scheduled like a near miss.
 - **Mastery blocks:** questions are matched to the outcome whose wording they share most (TF-IDF), because the curriculum doesn't label them. Solid = half the matched questions answered at 75%+; gold = all answered at 85%+ with reviews spaced two weeks or more. Outcomes with no matched question can be ticked off by hand.
 - **Readiness:** the average block score per topic, weighted by exam weight (midpoints of CFA Institute's ranges). "At risk" = weight × the share not yet mastered.
-- **Generated questions:** a run stores one seed per generated card, so a paused mock shows the same numbers when resumed. Generated cards don't count toward "curriculum questions answered" or the daily cap on new questions, and they stay out of the mastery map, which tracks the curriculum's own questions.
+- **Generated questions:** a run stores one seed per generated card, so a paused mock shows the same numbers when resumed. Generated and formula cards don't count toward "curriculum questions answered" or the daily cap on new questions, and they stay out of the mastery map, which tracks the curriculum's own questions.
 - **Mock reserve:** 125 questions (about a quarter of any module, standalone multiple choice only) are held out of practice for the Phase C mocks. Ethics, Derivatives and Corporate Issuers can't spare more without gutting their quizzes.
 - **XP:** 10 per right answer, 3 per attempt, 25 per finished module quiz, 50 more the first time a module passes.
 
@@ -57,4 +57,4 @@ Private prep site for the CFA Level I exam (May 2027 window), built from the off
 - **A. Shell, Home, study plan, mastery map, module quizzes** (done)
 - **B.** Lessons for all 102 study modules (done). `tools/outline.py` dumps a module's headings, outcomes and summary to the scratchpad as a writing aid (curriculum text: keep it out of the repo).
 - **C.** Topic tests, full mocks, analytics page (done). Mocks currently top up from never-answered and item-set questions; Phase D's calculation generators can add fresh questions once the bank is exhausted.
-- **D.** Calculation generators (done), formula flashcards, Ethics casebook, Ask Claude
+- **D.** Calculation generators (done), formula flashcards (done), Ethics casebook, Ask Claude

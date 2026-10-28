@@ -305,3 +305,4 @@ details.gx{border-bottom:1px solid var(--line);padding:8px 0}details.gx summary{
   .hbkey{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.fx{font-weight:600;font-size:1.05em;letter-spacing:.01em}.sol .fx{font-size:1.15em;margin-bottom:.4em}table.fsheet td{vertical-align:top}table.fsheet td:first-child{width:34%}

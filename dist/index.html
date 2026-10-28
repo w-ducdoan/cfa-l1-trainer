@@ -315,6 +315,7 @@ details.gx{border-bottom:1px solid var(--line);padding:8px 0}details.gx summary{
   .hbkey{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.fx{font-weight:600;font-size:1.05em;letter-spacing:.01em}.sol .fx{font-size:1.15em;margin-bottom:.4em}table.fsheet td{vertical-align:top}table.fsheet td:first-child{width:34%}
 
 </style>
 </head>
@@ -664,6 +665,125 @@ window.CFA_GEN = (() => {
   function comma(n) { return Math.round(n).toLocaleString('en-US'); }
 })();
 
+/* Formula flashcards: [module id, key, front, formula, note]. Original summaries of the Level I formulas;
+   each becomes a self-graded card (v<vol>f-<key>) in the spaced-repetition schedule. */
+window.CFA_FLASH = [
+  // ---------- Quantitative Methods ----------
+  ['v1m1', 'hpr', 'Holding period return', 'R = (P1 − P0 + D1) / P0', 'Price change plus income, over the starting price.'],
+  ['v1m1', 'geo', 'Geometric mean return', 'R_G = [(1 + R1)(1 + R2) … (1 + RT)]^(1/T) − 1', 'Compound growth rate; never above the arithmetic mean, and the gap widens with volatility.'],
+  ['v1m1', 'harm', 'Harmonic mean', 'X_H = n / Σ(1 / Xi)', 'Average cost per share when investing equal amounts each period (cost averaging). Harmonic ≤ geometric ≤ arithmetic.'],
+  ['v1m1', 'mwr', 'Money-weighted return', 'The IRR: the rate that makes PV(contributions) = PV(withdrawals + ending value)', 'Reflects the timing and size of the investor\'s own cash flows.'],
+  ['v1m1', 'twr', 'Time-weighted return', '(1 + r1)(1 + r2) … (1 + rn) − 1, with a new sub-period at each external cash flow', 'Removes the effect of cash-flow timing, so it is the standard for judging a manager.'],
+  ['v1m1', 'annual', 'Annualizing a return', 'r_annual = (1 + r_period)^c − 1, where c = periods in a year', 'Weekly: c = 52; for an 18-month return, c = 12/18.'],
+  ['v1m1', 'ccr', 'Continuously compounded return', 'r = ln(P1 / P0) = ln(1 + HPR)', 'Adds across periods: the T-period return is the sum of the one-period returns.'],
+  ['v1m1', 'real', 'Real return', '(1 + nominal) = (1 + real)(1 + inflation)', 'Nominal ≈ real + inflation for small rates.'],
+  ['v1m4', 'fv', 'Future value with compounding', 'FV = PV × (1 + r_s / m)^(m × N); continuous: FV = PV × e^(r_s × N)', 'r_s is the stated annual rate, m the compounding periods a year.'],
+  ['v1m4', 'ear', 'Effective annual rate', 'EAR = (1 + r_s / m)^m − 1; continuous: e^(r_s) − 1', 'More frequent compounding raises the EAR.'],
+  ['v1m4', 'pva', 'Present value of an annuity', 'PV = A × [1 − (1 + r)^−N] / r', 'Annuity due (payments at the start): multiply by (1 + r).'],
+  ['v1m4', 'perp', 'Perpetuity and growing perpetuity', 'PV = A / r; growing: PV = A1 / (r − g)', 'A1 is the first payment, one period from now; needs r > g.'],
+  ['v1m5', 'cv', 'Coefficient of variation', 'CV = s / X̄', 'Risk per unit of mean return; lower is better.'],
+  ['v1m5', 'svar', 'Sample variance', 's² = Σ(Xi − X̄)² / (n − 1)', 'Dividing by n − 1 (not n) removes the bias in the sample estimate.'],
+  ['v1m5', 'kurt', 'Excess kurtosis', 'Excess kurtosis = kurtosis − 3', 'Positive (leptokurtic): fatter tails than the normal distribution, so more extreme outcomes.'],
+  ['v1m5', 'corr', 'Correlation', 'ρ = Cov(X, Y) / (σX × σY)', 'Bounded between −1 and +1; measures linear association only.'],
+  ['v1m5', 'bayes', "Bayes' formula", 'P(A | B) = P(B | A) × P(A) / P(B)', 'Updates a prior probability P(A) with new information B.'],
+  ['v1m5', 'totprob', 'Total probability rule', 'P(B) = P(B | A) × P(A) + P(B | not A) × P(not A)', 'The denominator in Bayes\' formula.'],
+  ['v1m6', 'binom', 'Binomial probability', 'P(X = x) = C(n, x) × p^x × (1 − p)^(n − x); mean np, variance np(1 − p)', 'n independent trials, each with success probability p.'],
+  ['v1m6', 'z', 'Standardizing (z-score)', 'z = (X − μ) / σ', 'About 68% of a normal distribution lies within ±1σ, 95% within ±1.96σ, 99% within ±2.58σ.'],
+  ['v1m6', 'sfr', "Roy's safety-first ratio", 'SFRatio = [E(Rp) − R_L] / σp', 'Choose the portfolio with the highest ratio: lowest chance of falling below the threshold R_L.'],
+  ['v1m7', 'se', 'Standard error of the sample mean', 'σ_X̄ = σ / √n (use s / √n when σ is unknown)', 'Shrinks as the sample grows.'],
+  ['v1m7', 'ci', 'Confidence interval for a mean', 'X̄ ± reliability factor × standard error', 'z: 1.645 (90%), 1.96 (95%), 2.58 (99%). Use t with n − 1 df when σ is unknown and n is small.'],
+  ['v1m7', 'ttest', 't-test of a mean', 't = (X̄ − μ0) / (s / √n), with n − 1 degrees of freedom', 'Reject H0 if |t| exceeds the critical value.'],
+  ['v1m8', 'pvar', 'Two-asset portfolio variance', 'σp² = w1²σ1² + w2²σ2² + 2w1w2ρ12σ1σ2', 'Any correlation below +1 brings diversification.'],
+  ['v1m10', 'slope', 'Regression slope and intercept', 'b1 = Cov(X, Y) / Var(X); b0 = Ȳ − b1 × X̄', 'The fitted line passes through the means.'],
+  ['v1m10', 'r2', 'Coefficient of determination', 'R² = SSR / SST = 1 − SSE / SST', 'Share of the variation in Y explained by X; in simple regression it equals r².'],
+  ['v1m10', 'ftest', 'Regression F-test and SEE', 'F = MSR / MSE, MSE = SSE / (n − 2), SEE = √MSE', 'In simple regression, F = t² for the slope.'],
+
+  // ---------- Economics ----------
+  ['v2m1', 'elas', 'Price elasticity of demand', 'E = %ΔQ / %ΔP', '|E| > 1 elastic: a price cut raises total revenue. |E| < 1 inelastic.'],
+  ['v2m1', 'profit', 'Profit-maximizing output', 'Produce where MR = MC', 'Perfect competition: P = MR = MC. Short run: shut down if P < AVC. Long-run breakeven at P = minimum ATC.'],
+  ['v2m1', 'hhi', 'Herfindahl-Hirschman index', 'HHI = Σ(market share)²', 'Higher means more concentrated; doesn\'t capture threat of entry.'],
+  ['v2m3', 'mult', 'Fiscal multiplier', '1 / [1 − MPC × (1 − t)]', 't is the tax rate. Balanced-budget multiplier is positive.'],
+  ['v2m4', 'mmult', 'Money multiplier', '1 / reserve requirement', 'Maximum new money from each unit of reserves.'],
+  ['v2m4', 'fisher', 'Fisher effect and neutral rate', 'Nominal rate = real rate + expected inflation; neutral rate = trend real growth + inflation target', 'Policy rate above neutral is contractionary.'],
+  ['v2m8', 'fwdfx', 'Forward exchange rate', 'F(price/base) = S × (1 + i_price × τ) / (1 + i_base × τ)', 'τ = days/360. The higher-rate currency trades at a forward discount.'],
+  ['v2m8', 'fwdpts', 'Forward points', 'Forward points = (F − S) × 10,000 (most pairs)', 'Positive points: the base currency is at a forward premium.'],
+  ['v2m8', 'cross', 'Cross rate', 'A/C = A/B × B/C', 'Arrange the quotes so the middle currency cancels.'],
+
+  // ---------- Corporate Issuers ----------
+  ['v3m4', 'ccc', 'Cash conversion cycle', 'CCC = DSO + DIO − DPO', 'DSO = 365 / receivables turnover, DIO = 365 / inventory turnover, DPO = 365 / payables turnover.'],
+  ['v3m4', 'tcred', 'Cost of trade credit', '(1 + discount / (1 − discount))^(365 / days past the discount period) − 1', '2/10 net 30 paid on day 30: (1 + 2/98)^(365/20) − 1 ≈ 44.6%.'],
+  ['v3m4', 'liq', 'Liquidity ratios', 'Current = CA / CL; quick = (cash + securities + receivables) / CL; cash = (cash + securities) / CL', 'Quick ratio excludes inventory.'],
+  ['v3m5', 'npv', 'NPV, IRR and PI', 'NPV = Σ CFt / (1 + r)^t − outlay; IRR sets NPV = 0; PI = PV(future CFs) / outlay', 'If NPV and IRR rank mutually exclusive projects differently, follow NPV.'],
+  ['v3m6', 'wacc', 'Weighted average cost of capital', 'WACC = wd × rd × (1 − t) + wp × rp + we × re', 'Use target (market-value) weights and marginal costs.'],
+  ['v3m6', 'lev', 'Operating, financial and total leverage', 'DOL = Q(P − V) / [Q(P − V) − F]; DFL = EBIT / (EBIT − interest); DTL = DOL × DFL', 'Higher fixed costs, higher leverage, more volatile earnings.'],
+  ['v3m6', 'mm', 'Modigliani-Miller with taxes', 'V_L = V_U + t × D; re = r0 + (r0 − rd)(1 − t)(D / E)', 'Without taxes, drop t: capital structure doesn\'t change firm value.'],
+
+  // ---------- Financial Statement Analysis ----------
+  ['v4m2', 'eps', 'Basic and diluted EPS', 'Basic = (NI − preferred dividends) / weighted average shares. Diluted adds back what conversion saves and adds the new shares.', 'Only dilutive securities count: diluted EPS can\'t exceed basic.'],
+  ['v4m2', 'tsm', 'Treasury stock method', 'New shares = shares from options − (exercise proceeds / average market price)', 'Only for options in the money (average price above exercise price).'],
+  ['v4m6', 'lifo', 'LIFO reserve conversions', 'FIFO inventory = LIFO inventory + LIFO reserve; FIFO COGS = LIFO COGS − ΔLIFO reserve', 'In rising prices LIFO gives higher COGS, lower profit, lower taxes and lower inventory.'],
+  ['v4m6', 'nrv', 'Inventory write-downs', 'IFRS: lower of cost and NRV. US GAAP (FIFO, average cost): lower of cost and NRV; LIFO: lower of cost or market', 'IFRS allows reversals of write-downs; US GAAP doesn\'t.'],
+  ['v4m7', 'dep', 'Depreciation methods', 'Straight-line = (cost − salvage) / life; DDB = (2 / life) × beginning book value', 'DDB ignores salvage until book value would fall below it.'],
+  ['v4m7', 'impair', 'Impairment tests', 'US GAAP: impaired if carrying amount > undiscounted CFs; loss = carrying − fair value. IFRS: loss = carrying − recoverable amount', 'Recoverable amount = higher of fair value less costs to sell and value in use.'],
+  ['v4m8', 'bondexp', 'Bond interest expense (effective interest)', 'Interest expense = market rate at issue × carrying amount', 'Issued at a discount: expense exceeds the coupon and the carrying amount accretes up to par.'],
+  ['v4m8', 'lease', 'Lessee lease accounting', 'Right-of-use asset and lease liability = PV of lease payments', 'IFRS: depreciation + interest for all leases. US GAAP operating lease: one straight-line lease cost.'],
+  ['v4m9', 'tax', 'Income tax expense', 'Tax expense = taxes payable + ΔDTL − ΔDTA', 'DTL: tax base of an asset below its carrying amount (e.g. faster tax depreciation).'],
+  ['v4m4', 'cfo', 'Operating cash flow, indirect method', 'CFO = NI + non-cash charges − gains + losses − increases in operating assets + increases in operating liabilities', 'A rise in receivables uses cash; a rise in payables provides it.'],
+  ['v4m5', 'fcf', 'Free cash flow', 'FCFF = CFO + interest × (1 − t) − FCInv; FCFE = CFO − FCInv + net borrowing', 'Under IFRS check where interest paid was classified.'],
+  ['v4m11', 'dupont', 'DuPont ROE', 'ROE = (NI / EBT) × (EBT / EBIT) × (EBIT / revenue) × (revenue / assets) × (assets / equity)', 'Three-step: net margin × asset turnover × leverage.'],
+  ['v4m11', 'solv', 'Solvency ratios', 'Debt-to-equity = total debt / equity; interest coverage = EBIT / interest; financial leverage = average assets / average equity', 'Coverage falling is an early credit warning.'],
+
+  // ---------- Equity ----------
+  ['v5m3', 'margin', 'Margin call price', 'P = P0 × (1 − initial margin) / (1 − maintenance margin)', 'Leverage ratio = 1 / initial margin.'],
+  ['v5m3', 'levret', 'Leveraged return', 'Return on equity = (ΔP + dividends − interest) / initial equity', 'Ignoring costs, a 50% margin doubles the return in both directions.'],
+  ['v5m5', 'ev', 'Enterprise value', 'EV = market cap + debt + preferred + minority interest − cash and investments', 'Pair EV with pre-interest measures (EBITDA, revenue), equity value with post-interest measures (earnings).'],
+  ['v5m6', 'ggm', 'Gordon growth model', 'V0 = D1 / (r − g) = D0 × (1 + g) / (r − g)', 'Needs r > g; g is a stable long-run rate.'],
+  ['v5m6', 'pref', 'Preferred stock value', 'V0 = D / r', 'A perpetuity of fixed dividends.'],
+  ['v5m6', 'sgr', 'Sustainable growth rate', 'g = b × ROE, where b = retention ratio = 1 − payout', 'Growth funded by retained earnings alone.'],
+  ['v5m6', 'fcfe', 'FCFE valuation (stable growth)', 'Equity value = FCFE1 / (r − g)', 'Discount FCFF at WACC for firm value instead.'],
+  ['v5m7', 'pe', 'Justified P/E', 'Forward P/E = (D1 / E1) / (r − g); trailing P/E = (D0 / E0)(1 + g) / (r − g)', 'Higher payout or growth, or lower required return, justify a higher multiple.'],
+  ['v5m12', 'capm', 'CAPM', 'E(Ri) = Rf + βi × [E(Rm) − Rf]', 'Only systematic risk is priced.'],
+
+  // ---------- Fixed Income ----------
+  ['v6m6', 'bond', 'Bond price', 'P = Σ PMT / (1 + r)^t + FV / (1 + r)^N', 'Yield above the coupon: discount. Price moves toward par as maturity nears.'],
+  ['v6m6', 'full', 'Full price and accrued interest', 'Full price = flat price + accrued interest; AI = (t / T) × PMT; PV_full = PV_flat-date × (1 + r)^(t/T)', 'Quotes are flat prices; you pay the full price.'],
+  ['v6m7', 'cy', 'Current yield', 'Current yield = annual coupon / flat price', 'Ignores reinvestment and the pull to par.'],
+  ['v6m7', 'periodicity', 'Converting yield periodicity', '(1 + APR_m / m)^m = (1 + APR_n / n)^n', 'More frequent compounding means a lower stated rate for the same effective yield: a semiannual-bond-basis yield sits below its annual-basis equivalent.'],
+  ['v6m7', 'spreads', 'Yield spreads', 'G-spread: over government yield; I-spread: over swap rate; Z-spread: constant spread over the spot curve', 'OAS = Z-spread − option value (callable bonds).'],
+  ['v6m9', 'fwd', 'Forward rates from spot rates', '(1 + S_A)^A × (1 + F_{A,B−A})^(B−A) = (1 + S_B)^B', 'e.g. 1y1y = (1 + S2)² / (1 + S1) − 1.'],
+  ['v6m11', 'moddur', 'Modified duration', 'ModDur = MacDur / (1 + r), r = yield per period', '%ΔP ≈ −ModDur × Δy.'],
+  ['v6m11', 'amd', 'Approximate modified duration', 'ApproxModDur = (PV− − PV+) / (2 × Δy × PV0)', 'Approx Macaulay duration = ApproxModDur × (1 + r).'],
+  ['v6m11', 'money', 'Money duration and PVBP', 'Money duration = ModDur × full price; PVBP = (PV− − PV+) / 2 for a 1 bp move', 'Dollar change ≈ −money duration × Δy.'],
+  ['v6m12', 'cvx', 'Price change with convexity', '%ΔP ≈ −ModDur × Δy + ½ × Convexity × (Δy)²', 'Approx convexity = (PV− + PV+ − 2PV0) / [(Δy)² × PV0].'],
+  ['v6m12', 'pdur', 'Portfolio duration', 'Weighted average of the bonds\' durations, by market value', 'Assumes parallel yield-curve shifts.'],
+  ['v6m10', 'horizon', 'Duration gap', 'Duration gap = Macaulay duration − investment horizon', 'Positive gap: rising rates hurt (price risk dominates). Negative: reinvestment risk dominates.'],
+  ['v6m14', 'el', 'Expected credit loss', 'Expected loss = probability of default × loss given default; LGD = exposure × (1 − recovery rate)', 'Credit spread ≈ PD × LGD.'],
+  ['v6m19', 'smm', 'Prepayment rates', 'SMM = 1 − (1 − CPR)^(1/12)', 'Prepayment in a month = SMM × (balance − scheduled principal).'],
+
+  // ---------- Derivatives ----------
+  ['v7m4', 'fwdpx', 'Forward price with carry', 'F0 = (S0 − PV(benefits) + PV(costs)) × (1 + r)^T', 'Benefits: dividends, coupons, convenience yield. Costs: storage.'],
+  ['v7m5', 'fwdval', 'Value of a long forward during its life', 'Vt = St − PV(remaining benefits) + PV(remaining costs) − F0 / (1 + r)^(T − t)', 'Zero at initiation; at expiry, ST − F0.'],
+  ['v7m8', 'bounds', 'European option bounds', 'max(0, S0 − X/(1 + r)^T) ≤ c0 ≤ S0; max(0, X/(1 + r)^T − S0) ≤ p0 ≤ X/(1 + r)^T', 'Intrinsic value: call max(0, S − X), put max(0, X − S).'],
+  ['v7m9', 'pcp', 'Put-call parity', 'S0 + p0 = c0 + X / (1 + r)^T', 'Fiduciary call (call + bond) = protective put (stock + put).'],
+  ['v7m9', 'pcfp', 'Put-call-forward parity', 'F0 / (1 + r)^T + p0 = c0 + X / (1 + r)^T', 'Replace the stock with a forward on it.'],
+  ['v7m10', 'binom', 'One-period binomial model', 'π = (1 + r − d) / (u − d); c0 = [π × c_u + (1 − π) × c_d] / (1 + r)', 'Hedge ratio h = (c_u − c_d) / (S_u − S_d).'],
+  ['v7m7', 'swap', 'Par swap rate', 'Swap fixed rate = (1 − final discount factor) / Σ discount factors', 'Sets the swap\'s value to zero at initiation.'],
+
+  // ---------- Alternative Investments ----------
+  ['v8m4', 'cap', 'Cap rate valuation', 'Value = NOI / cap rate; NOI = rental income less vacancy and operating expenses (before financing and taxes)', 'Lower cap rate, higher value.'],
+  ['v8m2', 'multiples', 'Private equity fund multiples', 'DPI = distributions / paid-in; RVPI = NAV / paid-in; TVPI = DPI + RVPI', 'MOIC = (realized + unrealized value) / invested capital.'],
+  ['v8m6', 'fees', 'Hedge fund fees', 'Net return = (gross gain − management fee − incentive fee) / beginning assets', 'Read the terms: fee on beginning or ending assets, incentive net of the management fee or not, hurdle, high-water mark.'],
+  ['v8m5', 'commret', 'Commodity futures return', 'Total return = spot price return + roll return + collateral return', 'Backwardation gives positive roll return; contango, negative.'],
+
+  // ---------- Portfolio Management ----------
+  ['v9m1', 'utility', 'Investor utility', 'U = E(r) − ½ × A × σ²', 'A > 0 risk averse; higher A, steeper indifference curves.'],
+  ['v9m1', 'cal', 'Capital allocation line', 'E(Rp) = Rf + [(E(Ri) − Rf) / σi] × σp', 'Slope is the risky portfolio\'s Sharpe ratio.'],
+  ['v9m2', 'beta', 'Beta', 'βi = Cov(Ri, Rm) / σm² = ρi,m × σi / σm', 'Market beta is 1.'],
+  ['v9m2', 'risk', 'Total risk decomposition', 'σi² = βi² × σm² + σe²', 'Diversification removes only σe², the nonsystematic part.'],
+  ['v9m2', 'perf', 'Performance measures', 'Sharpe = (Rp − Rf) / σp; Treynor = (Rp − Rf) / βp; M² = (Sharpe_p − Sharpe_m) × σm; Jensen\'s α = Rp − [Rf + βp(Rm − Rf)]', 'Sharpe and M² use total risk; Treynor and alpha, systematic risk.'],
+  ['v9m6', 'var', 'Parametric value at risk', 'VaR = V × (z × σ − μ)', 'z = 1.65 at 95%, 2.33 at 99%. Scale by √T across periods, ignoring the mean.']
+];
+
 /* CFA L1 Trainer: state, sync, spaced repetition, study plan, mastery map, quizzes.
    Reads window.CFA_BANK (inlined by build.py); exhibit images come from window.CFA_IMG or img/<topic>.json. */
 (() => {
@@ -711,6 +831,13 @@ window.CFA_GEN = (() => {
       return { id, m: t.m, n: 0, gen: t.key, title: t.title, stem: x.stem, opts: order.map(i => opts[i]), ans: order.indexOf(0), sol: x.sol, los: null };
     }
   }
+  // Formula flashcards (src/cards.js): self-graded cards (id v<vol>f-<key>) on the same schedule as questions.
+  const FLASH = new Map((window.CFA_FLASH || []).map(([m, key, front, fx, note]) => {
+    const id = `v${TOP.get(MOD.get(m).topic).vol}f-${key}`;
+    return [id, { id, m, n: 0, flash: true, title: front, stem: [front], sol: [fx, note], los: null }];
+  }));
+  const FLASH_BY_TOPIC = Object.fromEntries(B.topics.map(t => [t.id, [...FLASH.keys()].filter(id => MOD.get(FLASH.get(id).m).topic === t.id)]));
+  FLASH.forEach((q, id) => Q.set(id, q));
   const newSeed = () => 1 + Math.floor(Math.random() * 1e9);
   const reseed = (ids, seeds) => ids.forEach(id => { if (isGen(id)) { if (seeds[id] == null) seeds[id] = newSeed(); Q.set(id, genQ(id, seeds[id])); } });
 
@@ -819,8 +946,9 @@ window.CFA_GEN = (() => {
   const examDay = () => parseDay(S.prog.settings.exam || DEFAULT_EXAM);
   const daysLeft = () => Math.max(0, Math.round((examDay() - today0()) / DAY));
   const topicName = m => TOP.get(m.topic).name;
-  const qtag = q => (q.gen ? esc(q.title) : 'Q' + q.n);
-  const src = q => { const m = MOD.get(q.m), t = TOP.get(m.topic); if (q.gen) return `Generated by the trainer from the formulas in ${t.name}, Learning Module ${m.num}. The numbers change every time; this is not a curriculum question.`; return `CFA Program Curriculum 2027, Level I, Vol. ${t.vol} ${t.name}, Learning Module ${m.num}, Practice Problem ${q.n}${q.pg ? ', p. ' + q.pg : ''}. Solution from the curriculum's end-of-module solutions.`; };
+  const qtag = q => (q.gen || q.flash ? esc(q.title) : 'Q' + q.n);
+  const src = q => { const m = MOD.get(q.m), t = TOP.get(m.topic); if (q.flash) return `Formula summary written for this trainer from ${t.name}, Learning Module ${m.num}. The curriculum's own wording is the final word.`;
+    if (q.gen) return `Generated by the trainer from the formulas in ${t.name}, Learning Module ${m.num}. The numbers change every time; this is not a curriculum question.`; return `CFA Program Curriculum 2027, Level I, Vol. ${t.vol} ${t.name}, Learning Module ${m.num}, Practice Problem ${q.n}${q.pg ? ', p. ' + q.pg : ''}. Solution from the curriculum's end-of-module solutions.`; };
 
   // Images: the offline page inlines them all in window.CFA_IMG; the artifact fetches per-topic packs
   // (img/<topic>.json) on demand, since its viewer allows fetch() of published files but not script files.
@@ -1117,7 +1245,22 @@ window.CFA_GEN = (() => {
       ${B.topics.filter(t => GEN_BY_TOPIC[t.id].length).map(t => { const ids = GEN_BY_TOPIC[t.id], s = genStats(ids);
         return `<details class="gx"><summary><span class="grow"><b>${esc(t.name)}</b> <span class="small muted">· ${ids.length} formulas · ${s.seen ? `${s.ok} of ${s.seen} right` : 'not started'}</span></span><button class="btn sm" data-act="gen-topic" data-id="${t.id}">Drill</button></summary>
           <ul class="list">${ids.map(id => { const q = GEN.get(id), m = MOD.get(q.m), c = S.prog.cards[id]; return `<li>${chip(id)}<div class="grow"><b>${esc(q.title)}</b><div class="small muted">LM ${m.num} ${esc(m.title)}${c ? ` · next review ${fmtDate(c.due)}` : ''}</div></div></li>`; }).join('')}</ul></details>`; }).join('')}
-      <p class="src">Each formula is one card in your daily review: a miss brings it back tomorrow with new numbers. Wrong options are built from the usual slips (missing a compounding step, the wrong base, a forgotten tax shield). Mocks add generated calculations once a topic's unseen curriculum questions run out.</p></section>`;
+      <p class="src">Each formula is one card in your daily review: a miss brings it back tomorrow with new numbers. Wrong options are built from the usual slips (missing a compounding step, the wrong base, a forgotten tax shield). Mocks add generated calculations once a topic's unseen curriculum questions run out.</p></section>
+    ${vFlash()}`;
+  }
+  const FC_N = 10;
+  const dueOf = ids => { const t = today0() + DAY - 1; return ids.filter(id => S.prog.cards[id] && S.prog.cards[id].due <= t); };
+  function vFlash() {
+    const all = [...FLASH.keys()], f = genStats(all), fresh = all.filter(id => !S.prog.cards[id]).length;
+    return `<section class="page"><h2>Formula flashcards</h2><p class="sub">${all.length} formulas to know cold. Write each from memory, flip the card, and grade yourself; misses come back tomorrow.</p>
+      <div class="glance"><div class="glh">Your deck</div><div class="glrow" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+        <div><b>${f.seen}<small>/${f.n}</small></b><span>Cards studied</span></div><div><b>${f.acc == null ? '–' : pct(f.acc)}</b><span>Recalled on the latest try</span></div>
+        <div><b>${f.due}</b><span>Due today</span></div><div><b>${fresh}</b><span>Not seen yet</span></div></div></div>
+      <div class="qfoot"><button class="btn big" data-act="fc-new" ${fresh ? '' : 'disabled'}>Learn ${Math.min(FC_N, fresh)} new cards</button><button class="btn ghost" data-act="fc-due" ${f.due ? '' : 'disabled'}>Review ${f.due} due</button><span class="small muted">New cards follow your study plan's order.</span></div>
+      ${B.topics.filter(t => FLASH_BY_TOPIC[t.id].length).map(t => { const ids = FLASH_BY_TOPIC[t.id], s = genStats(ids);
+        return `<details class="gx"><summary><span class="grow"><b>${esc(t.name)}</b> <span class="small muted">· ${ids.length} cards · ${s.seen ? `${s.ok} of ${s.seen} recalled` : 'not started'}</span></span><button class="btn sm" data-act="fc-topic" data-id="${t.id}">Study</button></summary>
+          <div class="tw"><table class="fin fsheet"><tbody>${ids.map(id => { const q = FLASH.get(id); return `<tr><td><b>${esc(q.title)}</b><div class="small muted">LM ${MOD.get(q.m).num}</div></td><td><span class="fx">${esc(q.sol[0])}</span><div class="small muted">${esc(q.sol[1])}</div></td></tr>`; }).join('')}</tbody></table></div></details>`; }).join('')}
+      <p class="src">Open a topic for its formula sheet. Cards are summaries written for this trainer; when wording differs, the curriculum wins.</p></section>`;
   }
 
   // ---------- analytics ----------
@@ -1239,7 +1382,7 @@ window.CFA_GEN = (() => {
         <div class="fcol"><div class="fh"><b>Practice:</b> keep it fresh</div>
           <button class="fbox f-steel" data-act="review">Daily review<small>${due} due · ${leftNew} new today</small></button>
           <button class="fbox f-steel" data-act="topic" data-id="${weakest.t.id}">Drill your biggest gap: ${esc(weakest.t.name)}<small>${weakest.s.risk.toFixed(1)} exam points at risk</small></button>
-          <button class="fbox f-steel" data-view="drills">Calculation drills<small>${GEN.size} formulas, new numbers every time</small></button>
+          <button class="fbox f-steel" data-view="drills">Calculation drills and formula cards<small>${GEN.size} generated calculations · ${FLASH.size} formula cards${dueOf([...FLASH.keys()]).length ? ` · ${dueOf([...FLASH.keys()]).length} due` : ''}</small></button>
           <button class="fbox f-steel" data-view="notebook">Error notebook<small>${Object.values(S.prog.cards).filter(c => !c.ok).length} misses to revisit</small></button></div>
         <div class="fcol"><div class="fh"><b>Rehearse:</b> exam conditions</div>
           ${nextQuiz ? `<button class="fbox f-line" data-quiz="${nextQuiz.id}" data-mode="exam">Timed quiz · LM ${nextQuiz.num}<small>${modQs(nextQuiz).filter(id => Q.get(id).opts).length} questions at 1:30 each</small></button>` : ''}
@@ -1427,16 +1570,17 @@ window.CFA_GEN = (() => {
         <div class="navgrid">${R.ids.map((x, k) => k < segA(R) || k >= segB(R) ? '' : `<button class="nv ${R.ans[x] && R.ans[x].pick != null ? 'ans' : ''} ${k === R.i ? 'cur' : ''} ${R.flags[x] ? 'flag' : ''}" data-go="${k}">${k + 1}</button>`).join('')}</div>`;
     } else if (!R.revealed) {
       foot = q.opts ? `<div class="lock"><span class="lbl">Lock in</span><button class="btn sm" data-conf="0" ${a.pick == null ? 'disabled' : ''}>Sure <kbd>1</kbd></button><button class="btn sm" data-conf="1" ${a.pick == null ? 'disabled' : ''}>Unsure <kbd>2</kbd></button><button class="btn sm" data-conf="2" ${a.pick == null ? 'disabled' : ''}>Guess <kbd>3</kbd></button></div>`
+        : q.flash ? `<p class="small muted">Write the formula from memory, then flip the card and grade yourself.</p><div class="qfoot"><button class="btn" data-act="reveal">Flip card <kbd>Enter</kbd></button></div>`
         : `<p class="small muted">Open-ended: work it out on paper, then check the curriculum's solution and grade yourself.</p><div class="qfoot"><button class="btn" data-act="reveal">Show solution <kbd>Enter</kbd></button></div>`;
     } else {
       const note = S.prog.notes[id] || {}, missed = q.opts ? !a.ok : a.self > 0;
       foot = `${q.opts ? `<div class="fb ${a.ok ? 'ok' : 'no'}"><b>${a.ok ? 'Correct.' : `Not quite. The answer is ${'ABC'[q.ans]}.`}</b></div>` : a.self == null ? '' : `<div class="fb ${a.self === 0 ? 'ok' : 'no'}"><b>${['Got it', 'Partly', 'Missed it'][a.self]}</b></div>`}
-        <div class="sol">${paras(q.sol)}</div>
+        <div class="sol">${q.flash ? `<p class="fx">${esc(q.sol[0])}</p><p>${esc(q.sol[1])}</p>` : paras(q.sol)}</div>
         ${!q.opts && a.self == null ? `<div class="lock"><span class="lbl">How did you do?</span><button class="btn sm" data-self="0">Got it <kbd>1</kbd></button><button class="btn sm" data-self="1">Partly <kbd>2</kbd></button><button class="btn sm" data-self="2">Missed it <kbd>3</kbd></button></div>` : ''}
         ${missed ? `<div class="tags"><span class="lbl">Why I missed it</span>${['concept', 'calc', 'misread'].map(t => `<button class="tagbtn" data-tag="${t}" aria-pressed="${note.tag === t}">${{ concept: 'Concept', calc: 'Calculation', misread: 'Misread' }[t]}</button>`).join('')}</div><textarea id="note" class="txt" placeholder="Note to future you (optional)" style="margin-top:8px">${esc(note.text || '')}</textarea>` : ''}
         ${q.opts || a.self != null ? `<div class="qfoot"><button class="btn" data-act="next">${R.i + 1 < R.ids.length ? 'Next question' : 'See results'} <kbd>Enter</kbd></button></div>` : ''}`;
     }
-    const card = `<section class="qcard"><div class="qref">${esc(topicName(m))} · LM ${m.num} · ${q.gen ? 'Calculation: ' + esc(q.title) : 'Question ' + q.n}${prior === null ? ' · new' : prior === 0 ? ' · missed before' : ' · seen before'}</div>
+    const card = `<section class="qcard"><div class="qref">${esc(topicName(m))} · LM ${m.num} · ${q.gen ? 'Calculation: ' + esc(q.title) : q.flash ? 'Formula card' : 'Question ' + q.n}${prior === null ? ' · new' : prior === 0 ? ' · missed before' : ' · seen before'}</div>
       <div class="stem">${paras(q.stem)}</div>${q.opts ? `<div class="opts">${opts}</div>` : ''}${foot}
       <p class="src">Source: ${esc(src(q))}</p></section>`;
     const multi = R.bounds.length > 2, segAns = R.ids.slice(segA(R), segB(R)).filter(x => R.ans[x] && R.ans[x].pick != null).length;
@@ -1588,6 +1732,9 @@ window.CFA_GEN = (() => {
     else if (a === 'gen-mix') startRun(genOrder([...GEN.keys()]).slice(0, GEN_N), 'Calculation drill · mixed', { keep: true });
     else if (a === 'gen-timed') startRun(genOrder([...GEN.keys()]).slice(0, GEN_N), 'Timed calculation set', { keep: true, mode: 'exam' });
     else if (a === 'gen-topic') startRun(genOrder(GEN_BY_TOPIC[d.id]), 'Calculation drill · ' + TOP.get(d.id).name, { keep: true });
+    else if (a === 'fc-new') { const order = new Map(plan().weeks.flatMap(w => w.mods).map((m, i) => [m.id, i])); startRun([...FLASH.keys()].filter(id => !S.prog.cards[id]).sort((x, y) => (order.get(FLASH.get(x).m) ?? 999) - (order.get(FLASH.get(y).m) ?? 999)).slice(0, FC_N), 'Formula cards · new', { keep: true }); }
+    else if (a === 'fc-due') startRun(dueOf([...FLASH.keys()]), 'Formula cards · due', { keep: true });
+    else if (a === 'fc-topic') startRun(genOrder(FLASH_BY_TOPIC[d.id]), 'Formula cards · ' + TOP.get(d.id).name, { keep: true });
     else if (a === 'nb-drill') startRun(nbItems().map(([id]) => id), 'Error notebook drill');
     else if (a === 'reveal') { S.run.revealed = true; render(); }
     else if (a === 'next') next();
