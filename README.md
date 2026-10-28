@@ -21,9 +21,9 @@ Private prep site for the CFA Level I exam (May 2027 window), built from the off
 | Lessons | One per module, in `lessons/<topic>.md` (original writing): exam takeaway, plain English, formulas, worked example, traps, 4-question quick check. All 10 topics, 102 lessons (one per study module), 408 check questions; the build shuffles each question's options so answers don't cluster on one letter. Format is documented in `tools/lessons.py`. |
 | Mastery map | One block per learning outcome (339): not started, started, solid, gold. Click a block for its outcome, matched questions and a drill. |
 | Module quizzes | Every module's end-of-chapter questions in practice mode (solution after each answer) or timed mode (1:30 a question, navigator, flags, results at the end). Pass mark 70%. Each module has its own page with overview, outcomes and quiz history. |
-| Exams | **Full mocks**: 180 questions in two timed sessions of 90 (2h15 each) with a break; weighted by exam weight; held-back questions first, then never-answered, then generated calculations, then longest-unseen; standalone questions first, item-set questions (with their case) fill short topics such as Derivatives. Pause any time: the run and clock are saved in the browser (`cfa-l1-mock-run`). **Topic tests**: up to 30 questions per topic at 1:30 each, spread across modules, never using the mock reserve. Results break down by topic or module against a 70% rule-of-thumb line. |
+| Exams | **Full mocks**: 180 questions in two timed sessions of 90 (2h15 each) with a break; weighted by exam weight; held-back questions first, then never-answered, then generated calculations and unseen Ethics cases, then longest-unseen; standalone questions first, item-set questions (with their case) fill short topics such as Derivatives. Pause any time: the run and clock are saved in the browser (`cfa-l1-mock-run`). **Topic tests**: up to 30 questions per topic at 1:30 each, spread across modules, never using the mock reserve. Results break down by topic or module against a 70% rule-of-thumb line. |
 | Analytics | Projected score with a 95% sample-size range (latest mock, else exam-weighted accuracy in topics with 10+ answers), accuracy and pace by topic, confidence check (right when sure/unsure/guess), timed-score history, reasons for misses, weekly practice time. |
-| Drills | **Calculation drills**: 41 formula templates across nine topics (`src/gen.js`) that make a fresh three-option question with new numbers each time. Wrong options come from the usual slips. Each template is one spaced-repetition card (`v<vol>g-<key>`) that also shows up in the daily review; mixed, timed and per-topic sets, weakest formulas first. **Formula flashcards**: 97 self-graded cards (`src/cards.js`, ids `v<vol>f-<key>`) on the same schedule, learned in study-plan order; each topic opens as a formula sheet. |
+| Drills | **Calculation drills**: 41 formula templates across nine topics (`src/gen.js`) that make a fresh three-option question with new numbers each time. Wrong options come from the usual slips. Each template is one spaced-repetition card (`v<vol>g-<key>`) that also shows up in the daily review; mixed, timed and per-topic sets, weakest formulas first. **Ethics casebook**: 32 original scenarios (`src/cases.js`, ids `v10e-<key>`) across Standards I to VII, drillable by Standard; option lengths are balanced so the answer can't be spotted by length. **Formula flashcards**: 97 self-graded cards (`src/cards.js`, ids `v<vol>f-<key>`) on the same schedule, learned in study-plan order; each topic opens as a formula sheet. |
 | Daily review | Spaced repetition: due reviews plus new questions from this week's modules. |
 | Error notebook | Misses and lucky guesses, tagged concept / calculation / misread. |
 
@@ -32,7 +32,7 @@ Private prep site for the CFA Level I exam (May 2027 window), built from the off
 | Question bank: questions, options, answer key, curriculum solutions, item sets, printed page, matched LOS, mock reserve flag; LOS and module overviews | `data/bank.json` |
 | Exhibits, tables and equations clipped from the PDFs | `data/img/*.png` |
 | Extraction warnings to check by hand | `data/report.txt` |
-| App | `src/app.js`, `src/style.css`; calculation generators in `src/gen.js` and formula cards in `src/cards.js` (both inlined ahead of `app.js`) |
+| App | `src/app.js`, `src/style.css`; calculation generators in `src/gen.js` and formula cards in `src/cards.js`, Ethics cases in `src/cases.js` (all inlined ahead of `app.js`) |
 | Built site | `dist/` |
 
 ## Rebuild
@@ -57,4 +57,4 @@ Private prep site for the CFA Level I exam (May 2027 window), built from the off
 - **A. Shell, Home, study plan, mastery map, module quizzes** (done)
 - **B.** Lessons for all 102 study modules (done). `tools/outline.py` dumps a module's headings, outcomes and summary to the scratchpad as a writing aid (curriculum text: keep it out of the repo).
 - **C.** Topic tests, full mocks, analytics page (done). Mocks currently top up from never-answered and item-set questions; Phase D's calculation generators can add fresh questions once the bank is exhausted.
-- **D.** Calculation generators (done), formula flashcards (done), Ethics casebook, Ask Claude
+- **D.** Calculation generators (done), formula flashcards (done), Ethics casebook (done), Ask Claude

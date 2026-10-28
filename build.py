@@ -44,8 +44,8 @@ all_imgs = {k: v for imgs in packs.values() for k, v in imgs.items()}
 fonts = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
          '<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400&display=swap" rel="stylesheet">\n')
 style = '<style>\n' + (src / 'style.css').read_text(encoding='utf-8') + '\n</style>\n'
-# gen.js and cards.js define window.CFA_GEN and window.CFA_FLASH, which app.js reads
-app_js = '\n'.join((src / f).read_text(encoding='utf-8') for f in ('gen.js', 'cards.js', 'app.js'))
+# gen.js, cards.js and cases.js define window.CFA_GEN, CFA_FLASH and CFA_CASES, which app.js reads
+app_js = '\n'.join((src / f).read_text(encoding='utf-8') for f in ('gen.js', 'cards.js', 'cases.js', 'app.js'))
 title = '<title>CFA L1 Trainer</title>\n'
 
 
