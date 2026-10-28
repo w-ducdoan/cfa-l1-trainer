@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CFA L1 Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one centered column (max 880px) under a sticky top bar; practice view widens to two panes for item sets. */
+:root {
+  --bg: #f4f6f3;
+  --surface: #ffffff;
+  --sunk: #e9ede8;
+  --ink: #18211e;
+  --muted: #5c6a64;
+  --line: #d3dad5;
+  --accent: #0d6a5b;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefe9;
+  --good: #2c7a47;
+  --good-soft: #e1f1e5;
+  --bad: #b23d2b;
+  --bad-soft: #f8e2dd;
+  --warn: #9a6a0c;
+  --warn-soft: #f6ecd2;
+  --img-filter: none;
+  --f-display: "Newsreader", Georgia, "Times New Roman", serif;
+  --f-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111614; --surface: #181f1c; --sunk: #202825; --ink: #e4ebe7; --muted: #95a49d; --line: #2e3833;
+    --accent: #4db49f; --accent-ink: #0b1310; --accent-soft: #1d3a33; --good: #63be83; --good-soft: #1b3324;
+    --bad: #ec8170; --bad-soft: #3d221d; --warn: #e2b553; --warn-soft: #3a2f16; --img-filter: invert(.9) hue-rotate(180deg);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111614; --surface: #181f1c; --sunk: #202825; --ink: #e4ebe7; --muted: #95a49d; --line: #2e3833;
+  --accent: #4db49f; --accent-ink: #0b1310; --accent-soft: #1d3a33; --good: #63be83; --good-soft: #1b3324;
+  --bad: #ec8170; --bad-soft: #3d221d; --warn: #e2b553; --warn-soft: #3a2f16; --img-filter: invert(.9) hue-rotate(180deg);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; line-height: 1.2; text-wrap: balance; margin: 0; }
+h1 { font-size: 1.9rem; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.08rem; }
+p { margin: 0; }
+.num, .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.label { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+/* top bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.bar-in { max-width: 1180px; margin: 0 auto; display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.brand { font-family: var(--f-display); font-size: 1.15rem; font-weight: 600; display: flex; align-items: baseline; gap: 8px; }
+.brand small { font-family: var(--f-mono); font-size: .72rem; color: var(--muted); font-weight: 400; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.tab { border: 0; background: none; padding: 6px 12px; border-radius: 6px; color: var(--muted); font-weight: 600; }
+.tab[aria-current="page"] { background: var(--accent-soft); color: var(--ink); }
+.sync { margin-left: auto; font-size: .78rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.sync::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.sync[data-state="synced"]::before { background: var(--good); }
+.sync[data-state="saving"]::before { background: var(--warn); }
+
+main { max-width: 880px; margin: 0 auto; padding-block: 24px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 20px; }
+main.wide { max-width: 1180px; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: grid; gap: 12px; min-width: 0; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.grow { flex: 1 1 auto; min-width: 0; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 7px; font-weight: 600; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.small { padding: 4px 10px; font-size: .85rem; }
+.btn:disabled { opacity: .45; cursor: default; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 99px; font-size: .74rem; font-weight: 600; background: var(--sunk); color: var(--muted); white-space: nowrap; }
+.chip.learning { background: var(--warn-soft); color: var(--warn); }
+.chip.solid { background: var(--accent-soft); color: var(--accent); }
+.chip.mastered { background: var(--good-soft); color: var(--good); }
+.chip.weak { background: var(--bad-soft); color: var(--bad); }
+
+/* today */
+.hero { display: grid; grid-template-columns: 1fr auto; gap: 16px 24px; align-items: end; }
+.count { text-align: right; }
+.count .big { font-family: var(--f-mono); font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.session { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.stat { background: var(--sunk); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+.stat b { font-family: var(--f-mono); font-size: 1.4rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.risk { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.risk th { text-align: left; font-weight: 600; color: var(--muted); font-size: .74rem; letter-spacing: .06em; text-transform: uppercase; padding: 4px 8px 6px 0; border-bottom: 1px solid var(--line); }
+.risk td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.risk td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.meter { height: 6px; border-radius: 3px; background: var(--sunk); overflow: hidden; min-width: 60px; }
+.meter i { display: block; height: 100%; background: var(--accent); }
+.tablewrap { overflow-x: auto; }
+.week { display: flex; gap: 4px; align-items: flex-end; height: 56px; }
+.week div { flex: 1; display: grid; gap: 3px; justify-items: center; font-size: .66rem; color: var(--muted); }
+.week span { width: 100%; max-width: 26px; border-radius: 3px 3px 0 0; background: var(--accent); min-height: 2px; }
+
+/* map */
+.topic { display: grid; gap: 10px; }
+.topic-head { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; align-items: center; cursor: pointer; background: none; border: 0; text-align: left; padding: 0; }
+.mods { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.mod { display: grid; grid-template-columns: 2.2em 1fr auto; gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.mod .mnum { font-family: var(--f-mono); color: var(--muted); font-size: .85rem; padding-top: 2px; }
+.mod .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.los { grid-column: 2 / -1; display: grid; gap: 4px; margin: 4px 0 2px; padding: 0; list-style: none; font-size: .9rem; }
+.los label { display: flex; gap: 8px; align-items: flex-start; }
+.los input { margin-top: 4px; accent-color: var(--accent); }
+details > summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
+
+/* practice */
+.qhead { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.progress { height: 4px; background: var(--sunk); border-radius: 2px; overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--accent); transition: width .2s; }
+.pace { font-family: var(--f-mono); font-size: .85rem; color: var(--muted); }
+.pace.over { color: var(--warn); }
+.qgrid { display: grid; gap: 20px; }
+.qgrid.split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.vignette { max-height: 75vh; overflow: auto; position: sticky; top: 72px; }
+.text { display: grid; gap: 10px; max-width: 70ch; }
+.text img, .sol img { max-width: 100%; height: auto; filter: var(--img-filter); border-radius: 4px; display: block; }
+.imgbox { overflow-x: auto; display: block; }
+.opt img { max-width: 100%; height: auto; filter: var(--img-filter); display: block; margin-top: 6px; }
+.opts { display: grid; gap: 8px; }
+.opt { display: grid; grid-template-columns: 2em 1fr; gap: 6px; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.opt .k { font-family: var(--f-mono); font-weight: 600; color: var(--muted); }
+.opt:hover:not(:disabled) { border-color: var(--accent); }
+.opt[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.opt.right { border-color: var(--good); background: var(--good-soft); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.opt:disabled { cursor: default; }
+.lock { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.verdict { font-weight: 700; }
+.verdict.ok { color: var(--good); }
+.verdict.no { color: var(--bad); }
+.sol { display: grid; gap: 10px; border-left: 3px solid var(--line); padding-left: 14px; max-width: 72ch; }
+.tagset { display: flex; gap: 6px; flex-wrap: wrap; }
+.tagbtn { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 3px 12px; font-size: .85rem; }
+.tagbtn[aria-pressed="true"] { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+textarea, input[type="text"], input[type="date"], input[type="number"], select { background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 7px 10px; }
+textarea { width: 100%; min-height: 64px; resize: vertical; }
+.keys { font-size: .78rem; color: var(--muted); }
+.btn.primary kbd { background: transparent; color: inherit; border-color: currentColor; opacity: .8; }
+kbd { font-family: var(--f-mono); font-size: .75rem; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--surface); }
+
+/* summary + notebook */
+.res { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.res .s { color: var(--muted); font-size: .9rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.empty { text-align: center; padding: 28px 12px; color: var(--muted); display: grid; gap: 8px; justify-items: center; }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: .9rem; z-index: 20; }
+
+@media (max-width: 760px) {
+  .qgrid.split { grid-template-columns: minmax(0, 1fr); }
+  .vignette { position: static; max-height: none; }
+  .session { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .hero { grid-template-columns: 1fr; }
+  .count { text-align: left; }
+  .sync { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+</style>
+</head>
+<body>
+<div id="app"><p style="padding:24px">Loading the question bank…</p></div>
+<script src="bank.js"></script>
+<script>
+/* CFA L1 Trainer: state, sync, spaced repetition, views. Reads window.CFA_BANK (bank.js) and lazy image packs (img/<topic>.js). */
+(() => {
+  const B = window.CFA_BANK;
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const DAY = 864e5;
+  const LS_KEY = 'cfa-l1-trainer-v1', LS_VIEW = 'cfa-l1-view', LS_RUN = 'cfa-l1-run';
+  const lsGet = k => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } };
+
+  // ---------- bank indexes ----------
+  const Q = new Map(B.questions.map(q => [q.id, q]));
+  const MOD = new Map(B.modules.map(m => [m.id, m]));
+  const SET = new Map(B.sets.map(s => [s.id, s]));
+  const TOP = new Map(B.topics.map(t => [t.id, t]));
+  const topicOfVol = Object.fromEntries(B.topics.map(t => [t.vol, t.id]));
+  const usable = q => (q.opts ? q.ans != null : q.sol.length > 0);
+  B.modules.forEach(m => { m.q = m.q.filter(id => usable(Q.get(id))); });
+  const TOTAL = B.modules.reduce((n, m) => n + m.q.length, 0);
+
+  // ---------- progress ----------
+  // cards[qid] = { due, ivl, ease, reps, lapses, last, ok, conf, h: [[t, ok, conf, secs]] }
+  const blank = () => ({ v: 1, updated: 0, cards: {}, notes: {}, daily: {}, los: {}, settings: { exam: '', newPerDay: 15 } });
+  const S = { view: lsGet(LS_VIEW) || 'today', prog: Object.assign(blank(), lsGet(LS_KEY) || {}), sync: 'local', refs: null, run: null, open: {}, nb: { topic: '', tag: '' } };
+
+  function mergeProg(a, b) {
+    const out = blank();
+    out.settings = (b.updated || 0) > (a.updated || 0) ? Object.assign({}, a.settings, b.settings) : Object.assign({}, b.settings, a.settings);
+    for (const src of [a.cards || {}, b.cards || {}]) for (const [k, c] of Object.entries(src)) if (!out.cards[k] || (c.last || 0) > (out.cards[k].last || 0)) out.cards[k] = c;
+    for (const src of [a.notes || {}, b.notes || {}]) for (const [k, n] of Object.entries(src)) if (!out.notes[k] || (n.t || 0) > (out.notes[k].t || 0)) out.notes[k] = n;
+    for (const src of [a.daily || {}, b.daily || {}]) for (const [k, d] of Object.entries(src)) if (!out.daily[k] || d.n > out.daily[k].n) out.daily[k] = d;
+    for (const src of [a.los || {}, b.los || {}]) for (const [k, v] of Object.entries(src)) out.los[k] = Object.assign({}, out.los[k], v);
+    out.updated = Math.max(a.updated || 0, b.updated || 0);
+    return out;
+  }
+
+  // Synced storage: one doc for settings/daily/notes/LOS, one doc per topic for cards (keeps each doc small).
+  const dirty = new Set();
+  let saveTimer = null, writing = false, again = false;
+  function save(topics) {
+    S.prog.updated = Date.now();
+    lsSet(LS_KEY, S.prog);
+    (topics || []).forEach(t => dirty.add(t)); dirty.add('_meta');
+    if (!S.refs) return;
+    clearTimeout(saveTimer); saveTimer = setTimeout(flush, 1500);
+  }
+  function cardsOf(topic) { const o = {}; for (const [k, c] of Object.entries(S.prog.cards)) if (topicOfQ(k) === topic) o[k] = c; return o; }
+  async function flush() {
+    if (!S.refs) return;
+    if (writing) { again = true; return; }
+    writing = true; setSync('saving');
+    try {
+      const todo = [...dirty]; dirty.clear();
+      for (const t of todo) {
+        if (t === '_meta') await S.refs.meta.set({ settings: S.prog.settings, daily: S.prog.daily, notes: S.prog.notes, los: S.prog.los, updated: S.prog.updated });
+        else await S.refs.col.doc('cards-' + t).set({ cards: cardsOf(t) });
+      }
+      setSync('synced');
+    } catch (e) { setSync('local'); }
+    writing = false; if (again) { again = false; flush(); }
+  }
+  function setSync(s) { S.sync = s; const el = $('#sync'); if (el) { el.dataset.state = s; el.textContent = { local: 'Saved on this device', saving: 'Saving…', synced: 'Synced to your account' }[s]; } }
+
+  async function connect() {
+    if (!window.claude || typeof window.claude.use !== 'function') return;
+    try {
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      const uid = user ? await user.id() : null;
+      if (!db || !uid) return;
+      const col = db.collection('data/users/' + uid);
+      const refs = { col, meta: col.doc('meta') };
+      const remote = blank();
+      const m = await refs.meta.get();
+      if (m.exists && m.data()) Object.assign(remote, { settings: m.data().settings || remote.settings, daily: m.data().daily || {}, notes: m.data().notes || {}, los: m.data().los || {}, updated: m.data().updated || 0 });
+      for (const t of B.topics) {
+        const d = await col.doc('cards-' + t.id).get();
+        if (d.exists && d.data() && d.data().cards) Object.assign(remote.cards, d.data().cards);
+      }
+      S.prog = mergeProg(S.prog, remote); lsSet(LS_KEY, S.prog);
+      S.refs = refs; setSync('synced');
+      B.topics.forEach(t => dirty.add(t.id)); dirty.add('_meta'); flush();
+      if (!S.run) render();
+    } catch (e) { setSync('local'); }
+  }
+
+  // ---------- helpers ----------
+  const topicOfQ = id => topicOfVol[+id.match(/^v(\d+)/)[1]];
+  const today0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  const dayKey = (t = Date.now()) => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const pct = v => Math.round(v * 100) + '%';
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); }
+
+  // Images live in per-topic packs (img/<topic>.js) that add to window.CFA_IMG.
+  window.CFA_IMG = window.CFA_IMG || {};
+  const packs = {};
+  function loadPack(topic) {
+    if (!packs[topic]) packs[topic] = new Promise(res => {
+      const s = document.createElement('script'); s.src = 'img/' + topic + '.js';
+      s.onload = () => res(true); s.onerror = () => res(false); document.head.appendChild(s);
+    });
+    return packs[topic];
+  }
+  function fillImages(root) {
+    root.querySelectorAll('img[data-img]').forEach(img => {
+      const name = img.dataset.img, topic = topicOfVol[+name.match(/^v(\d+)/)[1]];
+      loadPack(topic).then(ok => { const src = window.CFA_IMG[name]; if (src) img.src = src; else if (!ok) img.alt = 'Exhibit could not load. Check the source page in the curriculum.'; });
+    });
+  }
+  const inl = t => esc(t).replace(/\[\[img:([^\]]+)\]\]/g, (_, n) => `<span class="imgbox"><img data-img="${n}" alt="Exhibit or equation from the curriculum"></span>`);
+  function paras(list) {
+    return list.map(p => {
+      const m = p.match(/^\[\[img:(.+)\]\]$/);
+      return m ? `<div class="imgbox"><img data-img="${esc(m[1])}" alt="Exhibit or equation from the curriculum"></div>` : `<p>${inl(p)}</p>`;
+    }).join('');
+  }
+
+  // ---------- spaced repetition ----------
+  // Confidence: 0 sure, 1 unsure, 2 guess. A right guess is scheduled like a near miss.
+  function grade(qid, ok, conf, secs) {
+    const now = Date.now();
+    const c = S.prog.cards[qid] || { ivl: 0, ease: 2.4, reps: 0, lapses: 0, h: [] };
+    if (!ok) { c.lapses++; c.reps = 0; c.ivl = 1; c.ease = Math.max(1.3, c.ease - 0.2); }
+    else {
+      const q = conf === 0 ? 5 : conf === 1 ? 4 : 3;
+      if (c.reps === 0) c.ivl = q === 5 ? 3 : q === 4 ? 2 : 1;
+      else if (c.reps === 1) c.ivl = q === 5 ? 7 : q === 4 ? 4 : 2;
+      else c.ivl = Math.max(c.ivl + 1, Math.round(c.ivl * c.ease * (q === 5 ? 1 : q === 4 ? 0.8 : 0.5)));
+      c.ease = Math.min(3, Math.max(1.3, c.ease + (q === 5 ? 0.05 : q === 3 ? -0.15 : 0)));
+      c.reps++;
+    }
+    c.due = today0() + c.ivl * DAY; c.last = now; c.ok = ok ? 1 : 0; c.conf = conf;
+    c.h = (c.h || []).concat([[now, c.ok, conf, Math.round(secs)]]).slice(-6);
+    S.prog.cards[qid] = c;
+    const d = S.prog.daily[dayKey()] || { n: 0, ok: 0, secs: 0 };
+    d.n++; d.ok += c.ok; d.secs += Math.min(secs, 600); S.prog.daily[dayKey()] = d;
+    save([topicOfQ(qid)]);
+  }
+
+  // ---------- mastery ----------
+  function modStats(m) {
+    let seen = 0, ok = 0, ivl = 0, weak = 0;
+    m.q.forEach(id => { const c = S.prog.cards[id]; if (!c) return; seen++; ok += c.ok; ivl += c.ivl; if (!c.ok || c.conf === 2) weak++; });
+    const n = m.q.length, cov = n ? seen / n : 0, acc = seen ? ok / seen : 0;
+    let status = 'new';
+    if (seen) status = (cov === 1 && acc >= 0.85 && ivl / seen >= 21) ? 'mastered' : (cov >= 0.7 && acc >= 0.75) ? 'solid' : 'learning';
+    return { n, seen, cov, acc, weak, status, mastery: cov * acc };
+  }
+  function topicStats(t) {
+    let n = 0, seen = 0, ok = 0;
+    t.modules.forEach(id => { const s = modStats(MOD.get(id)); n += s.n; seen += s.seen; ok += s.acc * s.seen; });
+    const acc = seen ? ok / seen : 0, mastery = n ? (seen / n) * acc : 0;
+    return { n, seen, acc, mastery, risk: t.w * (1 - mastery) };
+  }
+  const STATUS = { new: 'Not started', learning: 'Learning', solid: 'Solid', mastered: 'Mastered' };
+
+  function dueIds() { const t = today0() + DAY - 1; return Object.entries(S.prog.cards).filter(([id, c]) => Q.has(id) && c.due <= t).sort((a, b) => a[1].due - b[1].due).map(([id]) => id); }
+  function focusModule() {
+    // next unfinished module in the topic with the most points at risk
+    const ranked = B.topics.map(t => ({ t, s: topicStats(t) })).sort((a, b) => b.s.risk - a.s.risk);
+    for (const { t } of ranked) for (const id of t.modules) { const m = MOD.get(id); if (m.q.some(q => !S.prog.cards[q])) return m; }
+    return null;
+  }
+  function newIds(n, mods) {
+    const out = [];
+    for (const m of mods) {
+      for (const id of m.q) { if (out.length >= n) break; if (!S.prog.cards[id]) out.push(id); }
+      if (out.length >= n) break;
+    }
+    return out;
+  }
+  // keep item-set questions together and in order
+  function orderForRun(ids) {
+    const groups = new Map();
+    ids.forEach(id => { const q = Q.get(id), k = q.set || id; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(id); });
+    const g = shuffle([...groups.values()]);
+    g.forEach(a => a.sort((x, y) => Q.get(x).n - Q.get(y).n));
+    return g.flat();
+  }
+
+  // ---------- runs ----------
+  function startRun(ids, label, opts = {}) {
+    if (!ids.length) { toast('Nothing to practice here yet'); return; }
+    S.run = { ids: opts.keepOrder ? ids : orderForRun(ids), i: 0, label, pick: null, done: [], t0: Date.now(), qt: Date.now(), revealed: false, requeued: {} };
+    setView('practice');
+  }
+  function runToday() {
+    const due = dueIds().slice(0, 80);
+    const left = Math.max(0, (+S.prog.settings.newPerDay || 15) - newToday());
+    const fm = focusModule();
+    const fresh = fm ? newIds(left, [fm, ...B.modules.filter(m => m.topic === fm.topic && m !== fm)]) : [];
+    startRun([...new Set([...due, ...fresh])], 'Today’s session');
+  }
+  function newToday() { const t0 = today0(); return Object.values(S.prog.cards).filter(c => c.h && c.h[0] && c.h[0][0] >= t0).length; }
+
+  // ---------- views ----------
+  const VIEWS = { today: 'Today', map: 'Curriculum', notebook: 'Error notebook' };
+  function setView(v) { S.view = v; if (v !== 'practice') lsSet(LS_VIEW, v); try { history.replaceState(null, '', '#' + v); } catch (e) { /* sandboxed */ } render(); window.scrollTo(0, 0); }
+
+  function shell(inner, wide) {
+    return `<header class="bar"><div class="bar-in">
+      <div class="brand">CFA L1 Trainer <small>2027 curriculum</small></div>
+      <nav class="tabs">${Object.entries(VIEWS).map(([k, l]) => `<button class="tab" data-view="${k}" ${S.view === k ? 'aria-current="page"' : ''}>${l}</button>`).join('')}</nav>
+      <div class="sync" id="sync" data-state="${S.sync}">${{ local: 'Saved on this device', saving: 'Saving…', synced: 'Synced to your account' }[S.sync]}</div>
+    </div></header><main class="${wide ? 'wide' : ''}">${inner}</main>`;
+  }
+
+  function vToday() {
+    const due = dueIds().length, fm = focusModule();
+    const left = Math.max(0, (+S.prog.settings.newPerDay || 15) - newToday());
+    const td = S.prog.daily[dayKey()] || { n: 0, ok: 0, secs: 0 };
+    const seenAll = Object.keys(S.prog.cards).filter(k => Q.has(k)).length;
+    const exam = S.prog.settings.exam ? new Date(S.prog.settings.exam + 'T12:00:00') : null;
+    const days = exam ? Math.ceil((exam - Date.now()) / DAY) : null;
+    const week = [...Array(7)].map((_, i) => { const t = Date.now() - (6 - i) * DAY, d = S.prog.daily[dayKey(t)]; return { l: new Date(t).toLocaleDateString(undefined, { weekday: 'narrow' }), n: d ? d.n : 0 }; });
+    const wmax = Math.max(10, ...week.map(w => w.n));
+    let streak = 0; for (let i = 0; ; i++) { const d = S.prog.daily[dayKey(Date.now() - i * DAY)]; if (d && d.n) streak++; else if (i > 0) break; else continue; if (i > 400) break; }
+    const ranked = B.topics.map(t => ({ t, s: topicStats(t) })).sort((a, b) => b.s.risk - a.s.risk);
+    return `
+    <section class="hero">
+      <div><div class="label">${new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div><h1>Today’s practice</h1>
+        <p class="muted">${seenAll} of ${TOTAL} curriculum questions seen${streak > 1 ? ` · ${streak}-day streak` : ''}</p></div>
+      <div class="count">${days != null ? `<div class="big">${Math.max(0, days)}</div><div class="label">days to your exam</div>` : `<div class="label">Exam date</div><button class="btn small" data-act="settings">Set your May 2027 date</button>`}</div>
+    </section>
+    <section class="panel">
+      <div class="session">
+        <div class="stat"><span class="label">Reviews due</span><b>${due}</b></div>
+        <div class="stat"><span class="label">New today</span><b>${Math.min(left, fm ? fm.q.length : 0) ? left : 0}</b></div>
+        <div class="stat"><span class="label">Answered today</span><b>${td.n}</b>${td.n ? `<span class="muted">${pct(td.ok / td.n)} right · ${Math.round(td.secs / 60)} min</span>` : ''}</div>
+      </div>
+      <div class="row"><div class="grow">${fm ? `<div class="label">New questions from</div><div><b>${esc(TOP.get(fm.topic).name)}</b> · Module ${fm.num}: ${esc(fm.title)}</div>` : '<div>Every curriculum question has been seen. Reviews keep them fresh.</div>'}</div>
+        <button class="btn primary" data-act="today" ${due + left ? '' : 'disabled'}>Start session</button></div>
+      <div class="keys">Keys: <kbd>A</kbd> <kbd>B</kbd> <kbd>C</kbd> pick, <kbd>1</kbd> sure <kbd>2</kbd> unsure <kbd>3</kbd> guess to lock in, <kbd>Enter</kbd> next.</div>
+    </section>
+    <section class="panel">
+      <div class="row"><h2 class="grow">Where you’re losing points</h2><span class="muted">exam weight × share not yet mastered</span></div>
+      <div class="tablewrap"><table class="risk"><thead><tr><th>Topic</th><th>Weight</th><th>Seen</th><th>Accuracy</th><th>Mastery</th><th>At risk</th><th></th></tr></thead><tbody>
+      ${ranked.map(({ t, s }) => `<tr><td>${esc(t.name)}</td><td class="n">${t.w}%</td><td class="n">${s.seen}/${s.n}</td><td class="n">${s.seen ? pct(s.acc) : '–'}</td>
+        <td><div class="meter"><i style="width:${pct(s.mastery)}"></i></div></td><td class="n">${s.risk.toFixed(1)} pts</td>
+        <td><button class="btn small" data-act="topic" data-id="${t.id}">Drill</button></td></tr>`).join('')}
+      </tbody></table></div>
+    </section>
+    <section class="panel">
+      <div class="row"><h3 class="grow">Last 7 days</h3><span class="muted">questions answered</span></div>
+      <div class="week">${week.map(w => `<div><span style="height:${Math.round(w.n / wmax * 40)}px" title="${w.n}"></span>${w.l}</div>`).join('')}</div>
+    </section>
+    ${S.open.settings ? vSettings() : `<div class="row"><button class="btn small" data-act="settings">Settings and backup</button></div>`}`;
+  }
+
+  function vSettings() {
+    return `<section class="panel"><h3>Settings and backup</h3>
+      <div class="row"><label for="set-exam">Exam date</label><input id="set-exam" type="date" value="${esc(S.prog.settings.exam || '')}">
+        <label for="set-new">New questions per day</label><input id="set-new" type="number" min="0" max="80" value="${+S.prog.settings.newPerDay || 15}" style="width:5em">
+        <button class="btn small primary" data-act="save-settings">Save</button></div>
+      <details><summary>Back up or restore progress</summary>
+        <div class="row" style="margin-top:8px"><button class="btn small" data-act="export">Copy progress as text</button><button class="btn small" data-act="import">Restore from pasted text</button></div>
+        <textarea id="backup" placeholder="Copied progress appears here. To restore, paste a backup here and press Restore."></textarea>
+      </details></section>`;
+  }
+
+  function vMap() {
+    return `<section><h1>Curriculum</h1><p class="muted">Ten topics in exam-weight order. Open a topic to see its modules, learning outcomes and practice buttons.</p></section>` +
+      [...B.topics].sort((a, b) => b.w - a.w).map(t => {
+        const s = topicStats(t), open = S.open['t-' + t.id];
+        return `<section class="panel topic"><button class="topic-head" data-act="toggle" data-id="t-${t.id}" aria-expanded="${!!open}">
+          <div><h2>${esc(t.name)}</h2><div class="muted">${t.w}% of the exam · ${s.seen}/${s.n} questions seen${s.seen ? ' · ' + pct(s.acc) + ' right' : ''}</div></div>
+          <div class="meter" style="width:120px"><i style="width:${pct(s.mastery)}"></i></div></button>
+          ${open ? `<div class="mods">${t.modules.map(id => vMod(MOD.get(id))).join('')}</div>` : ''}</section>`;
+      }).join('');
+  }
+  function vMod(m) {
+    const s = modStats(m), chk = S.prog.los[m.id] || {};
+    const done = m.los.filter((_, i) => chk[i]).length;
+    return `<div class="mod"><div class="mnum">${m.num}</div>
+      <div><b>${esc(m.title)}</b><div class="row" style="gap:6px;margin-top:3px"><span class="chip ${s.status}">${STATUS[s.status]}</span>
+        <span class="muted">${m.q.length ? `${s.seen}/${s.n} seen${s.seen ? ' · ' + pct(s.acc) + ' right' : ''}` : 'No end-of-module questions'}</span>${s.weak ? `<span class="chip weak">${s.weak} weak</span>` : ''}</div></div>
+      <div class="acts">${m.q.length ? `<button class="btn small primary" data-act="mod" data-id="${m.id}">Practice</button>` : ''}${s.weak ? `<button class="btn small" data-act="modweak" data-id="${m.id}">Weak only</button>` : ''}</div>
+      ${m.los.length ? `<details class="los-wrap" style="grid-column:2/-1"><summary>Learning outcomes · ${done}/${m.los.length} checked off</summary><ul class="los">
+        ${m.los.map((l, i) => `<li><label><input type="checkbox" data-los="${m.id}" data-i="${i}" ${chk[i] ? 'checked' : ''}><span>${esc(l)}</span></label></li>`).join('')}</ul></details>` : ''}
+    </div>`;
+  }
+
+  function vPractice() {
+    const R = S.run;
+    if (!R) return `<div class="empty"><p>No session running.</p><button class="btn primary" data-view="today">Back to Today</button></div>`;
+    if (R.i >= R.ids.length) return vSummary();
+    const q = Q.get(R.ids[R.i]), m = MOD.get(q.m), set = q.set && SET.get(q.set);
+    const secs = Math.round((Date.now() - R.qt) / 1000);
+    if (R.priorFor !== q.id) { R.priorFor = q.id; R.prior = S.prog.cards[q.id] ? { ok: S.prog.cards[q.id].ok } : null; }
+    const card = R.prior;
+    const opts = q.opts ? q.opts.map((o, i) => {
+      let cls = '';
+      if (R.revealed) cls = i === q.ans ? 'right' : (i === R.pick ? 'wrong' : '');
+      return `<button class="opt ${cls}" data-pick="${i}" aria-pressed="${R.pick === i}" ${R.revealed ? 'disabled' : ''}><span class="k">${'ABC'[i]}</span><span>${inl(o)}</span></button>`;
+    }).join('') : '';
+    const body = `<div class="panel">
+        <div class="text">${paras(q.stem)}</div>
+        ${q.opts ? `<div class="opts">${opts}</div>` : `<p class="muted">This one is open-ended. Work it out on paper, then reveal the solution and grade yourself.</p>`}
+        ${R.revealed ? vReveal(q) : q.opts ? `<div class="lock"><span class="label">Lock in</span>
+            <button class="btn small" data-conf="0" ${R.pick == null ? 'disabled' : ''}>Sure <kbd>1</kbd></button>
+            <button class="btn small" data-conf="1" ${R.pick == null ? 'disabled' : ''}>Unsure <kbd>2</kbd></button>
+            <button class="btn small" data-conf="2" ${R.pick == null ? 'disabled' : ''}>Guess <kbd>3</kbd></button></div>`
+          : `<div class="lock"><button class="btn primary small" data-act="reveal-open">Show solution</button></div>`}
+      </div>`;
+    return `<section class="panel">
+      <div class="qhead"><div><div class="label">${esc(R.label)}</div><div><b>${esc(TOP.get(m.topic).name)}</b> · M${m.num} ${esc(m.title)} · Q${q.n}${card ? ` <span class="chip">${card.ok ? 'seen before' : 'missed before'}</span>` : ' <span class="chip">new</span>'}</div></div>
+        <div class="row"><span class="pace" id="pace">${R.revealed ? '' : fmtSecs(secs)}</span><span class="num muted">${R.i + 1} / ${R.ids.length}</span><button class="btn small" data-act="end">End session</button></div></div>
+      <div class="progress"><i style="width:${(R.i / R.ids.length) * 100}%"></i></div></section>
+      ${set ? `<div class="qgrid split"><section class="panel vignette"><div class="label">Case for questions ${set.lo}–${set.hi}</div><div class="text">${paras(set.text)}</div></section>${body}</div>` : body}`;
+  }
+  const fmtSecs = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+  function vReveal(q) {
+    const R = S.run, note = S.prog.notes[q.id] || {};
+    const ok = R.result;
+    const verdict = q.opts ? (ok ? `<span class="verdict ok">Correct</span>` : `<span class="verdict no">Not quite. The answer is ${'ABC'[q.ans]}.</span>`)
+      : (R.self == null ? '' : `<span class="verdict ${R.self === 0 ? 'ok' : 'no'}">${['Got it', 'Partly', 'Missed'][R.self]}</span>`);
+    const selfGrade = !q.opts && R.self == null ? `<div class="lock"><span class="label">How did you do?</span>
+        <button class="btn small" data-self="0">Got it <kbd>1</kbd></button><button class="btn small" data-self="1">Partly <kbd>2</kbd></button><button class="btn small" data-self="2">Missed <kbd>3</kbd></button></div>` : '';
+    const missed = q.opts ? !ok : R.self != null && R.self > 0;
+    return `<div class="row">${verdict}</div>
+      <div class="sol">${paras(q.sol)}</div>
+      ${selfGrade}
+      ${missed ? `<div class="tagset"><span class="label" style="align-self:center">Why I missed it</span>
+        ${['concept', 'calc', 'misread'].map(t => `<button class="tagbtn" data-tag="${t}" aria-pressed="${note.tag === t}">${{ concept: 'Concept', calc: 'Calculation', misread: 'Misread' }[t]}</button>`).join('')}</div>
+        <textarea id="note" placeholder="Note to future you (optional)">${esc(note.text || '')}</textarea>` : ''}
+      ${q.opts || R.self != null ? `<div class="row"><button class="btn primary" data-act="next">${R.i + 1 < R.ids.length ? 'Next question' : 'Finish'} <kbd>Enter</kbd></button></div>` : ''}`;
+  }
+
+  function vSummary() {
+    const R = S.run, n = R.done.length, ok = R.done.filter(d => d.ok).length, mins = Math.round((Date.now() - R.t0) / 60000);
+    const avg = n ? Math.round(R.done.reduce((s, d) => s + d.secs, 0) / n) : 0;
+    const missed = R.done.filter(d => !d.ok);
+    return `<section class="panel"><div class="label">${esc(R.label)} · finished</div><h1>${n ? pct(ok / n) : '–'} right</h1>
+      <div class="session"><div class="stat"><span class="label">Answered</span><b>${n}</b></div><div class="stat"><span class="label">Minutes</span><b>${mins}</b></div><div class="stat"><span class="label">Avg pace</span><b>${fmtSecs(avg)}</b><span class="muted">exam pace is 1:30</span></div></div>
+      ${missed.length ? `<h3>Missed this session</h3><div>${missed.map(d => { const q = Q.get(d.id); return `<div class="res"><div class="s">${esc(MOD.get(q.m).title)} Q${q.n}: ${esc((q.stem[0] || '').replace(/^\[\[img:.*\]\]$/, 'Exhibit question'))}</div><span class="chip weak">due tomorrow</span></div>`; }).join('')}</div>
+        <div class="row"><button class="btn" data-act="redo-missed">Retry the misses now</button></div>` : ''}
+      <div class="row"><button class="btn primary" data-act="done">Back to Today</button></div></section>`;
+  }
+
+  function vNotebook() {
+    const items = Object.entries(S.prog.cards).filter(([id, c]) => Q.has(id) && (!c.ok || c.conf === 2 || (S.prog.notes[id] && S.prog.notes[id].tag)))
+      .filter(([id]) => !S.nb.topic || topicOfQ(id) === S.nb.topic)
+      .filter(([id]) => !S.nb.tag || (S.prog.notes[id] || {}).tag === S.nb.tag)
+      .sort((a, b) => b[1].last - a[1].last);
+    const counts = { concept: 0, calc: 0, misread: 0 };
+    Object.values(S.prog.notes).forEach(n => { if (counts[n.tag] != null) counts[n.tag]++; });
+    return `<section><h1>Error notebook</h1><p class="muted">Questions you missed or guessed. Tag why you missed each one, and the pattern shows here.</p></section>
+      <section class="panel"><div class="session">
+        <div class="stat"><span class="label">Concept gaps</span><b>${counts.concept}</b></div><div class="stat"><span class="label">Calculation slips</span><b>${counts.calc}</b></div><div class="stat"><span class="label">Misreads</span><b>${counts.misread}</b></div></div>
+        <div class="filters"><select id="nb-topic" aria-label="Filter by topic"><option value="">All topics</option>${B.topics.map(t => `<option value="${t.id}" ${S.nb.topic === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
+          <select id="nb-tag" aria-label="Filter by reason"><option value="">Any reason</option>${['concept', 'calc', 'misread'].map(t => `<option value="${t}" ${S.nb.tag === t ? 'selected' : ''}>${{ concept: 'Concept', calc: 'Calculation', misread: 'Misread' }[t]}</option>`).join('')}</select>
+          <button class="btn small primary" data-act="nb-drill" ${items.length ? '' : 'disabled'}>Drill these ${items.length}</button></div>
+        ${items.length ? `<div>${items.slice(0, 120).map(([id, c]) => { const q = Q.get(id), n = S.prog.notes[id] || {};
+          return `<div class="res"><div class="grow"><div><b>${esc(TOP.get(MOD.get(q.m).topic).name)}</b> · M${MOD.get(q.m).num} Q${q.n} ${n.tag ? `<span class="chip weak">${{ concept: 'Concept', calc: 'Calculation', misread: 'Misread' }[n.tag]}</span>` : ''}${c.ok && c.conf === 2 ? '<span class="chip learning">right by guessing</span>' : ''}</div>
+            <div class="s">${esc(n.text || (q.stem[0] || '').replace(/^\[\[img:.*\]\]$/, 'Exhibit question'))}</div></div><span class="muted num">${new Date(c.last).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span></div>`; }).join('')}</div>`
+          : `<div class="empty"><p>No misses logged${S.nb.topic || S.nb.tag ? ' for this filter' : ' yet'}.</p><p>Misses and guesses land here automatically after each session.</p></div>`}
+      </section>`;
+  }
+
+  // ---------- render + events ----------
+  let paceTimer = null;
+  function render() {
+    const root = $('#app');
+    const v = S.view === 'practice' ? vPractice() : S.view === 'map' ? vMap() : S.view === 'notebook' ? vNotebook() : vToday();
+    root.innerHTML = shell(v, S.view === 'practice' && S.run && S.run.i < S.run.ids.length && Q.get(S.run.ids[S.run.i]).set);
+    fillImages(root);
+    clearInterval(paceTimer);
+    if (S.view === 'practice' && S.run && !S.run.revealed && S.run.i < S.run.ids.length) {
+      paceTimer = setInterval(() => { const el = $('#pace'); if (!el) return; const s = Math.round((Date.now() - S.run.qt) / 1000); el.textContent = fmtSecs(s); el.classList.toggle('over', s > 90); }, 1000);
+    }
+  }
+
+  function answer(conf) {
+    const R = S.run, q = Q.get(R.ids[R.i]);
+    if (R.revealed || R.pick == null) return;
+    R.revealed = true; R.result = R.pick === q.ans;
+    const secs = (Date.now() - R.qt) / 1000;
+    grade(q.id, R.result, conf, secs);
+    R.done.push({ id: q.id, ok: R.result, secs });
+    if (!R.result) requeue(q.id);
+    render();
+  }
+  function selfGrade(v) {
+    const R = S.run, q = Q.get(R.ids[R.i]), secs = (Date.now() - R.qt) / 1000;
+    R.self = v; const ok = v === 0;
+    grade(q.id, v < 2, v === 0 ? 0 : 2, secs);
+    R.done.push({ id: q.id, ok, secs });
+    if (v === 2) requeue(q.id);
+    render();
+  }
+  // a missed standalone question comes back later in the same session, once
+  function requeue(id) {
+    const R = S.run, q = Q.get(id);
+    if (q.set || R.requeued[id]) return;
+    R.requeued[id] = 1; R.ids.splice(Math.min(R.ids.length, R.i + 6), 0, id);
+  }
+  function next() {
+    const R = S.run, ta = $('#note');
+    if (ta) saveNote(R.ids[R.i], { text: ta.value.trim() });
+    R.i++; R.pick = null; R.revealed = false; R.result = null; R.self = null; R.qt = Date.now();
+    render(); window.scrollTo(0, 0);
+  }
+  function saveNote(id, patch) {
+    const n = Object.assign({}, S.prog.notes[id], patch, { t: Date.now() });
+    if (!n.tag && !n.text) delete S.prog.notes[id]; else S.prog.notes[id] = n;
+    save();
+  }
+
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-view],[data-act],[data-pick],[data-conf],[data-self],[data-tag]');
+    if (!el) return;
+    const d = el.dataset;
+    if (d.view) { if (d.view !== 'practice' && S.run && S.run.i < S.run.ids.length && S.view === 'practice') S.run = null; setView(d.view); return; }
+    if (d.pick != null && S.run && !S.run.revealed) { S.run.pick = +d.pick; render(); return; }
+    if (d.conf != null) { answer(+d.conf); return; }
+    if (d.self != null) { selfGrade(+d.self); return; }
+    if (d.tag) { const id = S.run.ids[S.run.i], cur = (S.prog.notes[id] || {}).tag; saveNote(id, { tag: cur === d.tag ? '' : d.tag }); render(); return; }
+    const a = d.act;
+    if (a === 'today') runToday();
+    else if (a === 'topic') { const t = TOP.get(d.id); const ids = t.modules.flatMap(id => MOD.get(id).q); const unseen = ids.filter(i => !S.prog.cards[i]); const weak = ids.filter(i => S.prog.cards[i] && (!S.prog.cards[i].ok || S.prog.cards[i].conf === 2)); startRun([...weak, ...shuffle(unseen)].slice(0, 25).concat(weak.length + unseen.length ? [] : shuffle(ids).slice(0, 20)), t.name + ' drill'); }
+    else if (a === 'mod') { const m = MOD.get(d.id); startRun(m.q.slice(), 'Module ' + m.num + ': ' + m.title); }
+    else if (a === 'modweak') { const m = MOD.get(d.id); startRun(m.q.filter(i => S.prog.cards[i] && (!S.prog.cards[i].ok || S.prog.cards[i].conf === 2)), 'Weak spots: ' + m.title); }
+    else if (a === 'toggle') { S.open[d.id] = !S.open[d.id]; render(); }
+    else if (a === 'reveal-open') { S.run.revealed = true; render(); }
+    else if (a === 'next') next();
+    else if (a === 'end') { S.run.ids = S.run.ids.slice(0, S.run.i); render(); }
+    else if (a === 'done') { S.run = null; setView('today'); }
+    else if (a === 'redo-missed') { const ids = [...new Set(S.run.done.filter(x => !x.ok).map(x => x.id))]; startRun(ids, 'Retry misses', { keepOrder: true }); }
+    else if (a === 'nb-drill') { const ids = Object.entries(S.prog.cards).filter(([id, c]) => Q.has(id) && (!c.ok || c.conf === 2 || (S.prog.notes[id] && S.prog.notes[id].tag))).filter(([id]) => !S.nb.topic || topicOfQ(id) === S.nb.topic).filter(([id]) => !S.nb.tag || (S.prog.notes[id] || {}).tag === S.nb.tag).map(([id]) => id); startRun(ids, 'Error notebook drill'); }
+    else if (a === 'settings') { S.open.settings = !S.open.settings; if (S.view !== 'today') setView('today'); else render(); }
+    else if (a === 'save-settings') { S.prog.settings.exam = $('#set-exam').value; S.prog.settings.newPerDay = Math.max(0, Math.min(80, +$('#set-new').value || 15)); save(); S.open.settings = false; render(); toast('Settings saved'); }
+    else if (a === 'export') { const ta = $('#backup'); ta.value = JSON.stringify(S.prog); ta.select(); if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(() => toast('Progress copied'), () => toast('Select the text and copy it')); }
+    else if (a === 'import') {
+      try { const p = JSON.parse($('#backup').value); if (!p || typeof p.cards !== 'object') throw 0; S.prog = mergeProg(S.prog, p); B.topics.forEach(t => dirty.add(t.id)); save(); render(); toast('Progress restored and merged'); }
+      catch (err) { toast('That text is not a progress backup'); }
+    }
+  });
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (t.dataset.los) { const o = S.prog.los[t.dataset.los] = S.prog.los[t.dataset.los] || {}; o[t.dataset.i] = t.checked ? 1 : 0; save(); const s = t.closest('details').querySelector('summary'); const m = MOD.get(t.dataset.los); s.textContent = `Learning outcomes · ${m.los.filter((_, i) => o[i]).length}/${m.los.length} checked off`; }
+    if (t.id === 'nb-topic') { S.nb.topic = t.value; render(); }
+    if (t.id === 'nb-tag') { S.nb.tag = t.value; render(); }
+  });
+  document.addEventListener('keydown', e => {
+    if (S.view !== 'practice' || !S.run || (e.target.matches && e.target.matches('textarea,input,select')) || e.ctrlKey || e.metaKey || e.altKey) return;
+    const R = S.run, k = e.key.toLowerCase();
+    if (R.i >= R.ids.length) return;
+    const q = Q.get(R.ids[R.i]);
+    if (!R.revealed && q.opts && 'abc'.includes(k) && k.length === 1) { R.pick = 'abc'.indexOf(k); render(); }
+    else if (!R.revealed && q.opts && '123'.includes(k) && k.length === 1) answer(+k - 1);
+    else if (!R.revealed && !q.opts && k === 'enter') { R.revealed = true; render(); }
+    else if (R.revealed && !q.opts && R.self == null && '123'.includes(k) && k.length === 1) selfGrade(+k - 1);
+    else if (R.revealed && k === 'enter' && (q.opts || R.self != null)) next();
+  });
+
+  window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (VIEWS[v] && v !== S.view) setView(v); });
+  const h = (location.hash || '').slice(1);
+  if (VIEWS[h]) S.view = h;
+  if (S.view === 'practice') S.view = 'today';
+  render();
+  connect();
+})();
+
+</script>
+</body>
+</html>
