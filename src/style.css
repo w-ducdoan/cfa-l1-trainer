@@ -193,6 +193,12 @@ svg.act{width:100%;height:auto;display:block}
 .lesson ul{padding-left:1.2em}.lesson li{margin:.3em 0}
 .take span{display:block;font-family:var(--sans);font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:var(--steel);font-weight:700;margin-bottom:4px}
 .formula{font-family:var(--display);font-size:1.05rem;background:var(--beige);padding:.7em 1em;overflow-x:auto;max-width:100%;line-height:1.7;margin:10px 0}
+.formula+.fkey{margin-top:-10px}
+.lesson>.formula,.lesson>.fkey{max-width:660px}
+.fkey{background:var(--surface2);border-left:3px solid var(--steel);padding:8px 14px 10px;margin:0 0 12px;max-width:72ch;font-size:.92rem}
+.fkey>span{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:700;margin-bottom:4px}
+.fkey dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:3px 14px;margin:0}
+.fkey dt{font-family:var(--display);font-weight:600;white-space:nowrap}.fkey dd{margin:0}
 .warn{background:var(--gold-soft);border-left:3px solid var(--orange);padding:9px 13px;margin:10px 0}
 .tip{background:var(--steel-soft);border-left:3px solid var(--steel);padding:9px 13px;margin:10px 0}
 .warn ul,.tip ul{margin:0;padding-left:1.1em}.warn li,.tip li{margin:.25em 0}

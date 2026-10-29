@@ -16,6 +16,8 @@ Format (one file per topic, any number of lessons):
     ```                         formula block (line breaks kept)
     PV = FV / (1 + r)^N
     ```
+    ~ PV :: present value       "Where" key under the formula: define every symbol
+    ~ r :: interest rate per period
 
     ## Quick check              special section: questions written for the trainer
     ? Question text
@@ -48,6 +50,12 @@ def render_blocks(lines):
             flush(); j = i + 1; body = []
             while j < len(lines) and not lines[j].strip().startswith('```'): body.append(lines[j].rstrip()); j += 1
             out.append('<div class="formula">' + '<br>'.join(inline(b) for b in body) + '</div>'); i = j + 1; continue
+        if s.startswith('~ '):
+            # "Where" key for the formula above it: one "~ symbol :: meaning" line per variable
+            flush(); rows = []
+            while i < len(lines) and lines[i].strip().startswith('~ '):
+                k, _, v = lines[i].strip()[2:].partition(' :: '); rows.append(f'<dt>{inline(k)}</dt><dd>{inline(v)}</dd>'); i += 1
+            out.append('<div class="fkey"><span>Where</span><dl>' + ''.join(rows) + '</dl></div>'); continue
         if s.startswith('- '):
             flush(); items = []
             while i < len(lines) and lines[i].strip().startswith('- '): items.append(inline(lines[i].strip()[2:])); i += 1
