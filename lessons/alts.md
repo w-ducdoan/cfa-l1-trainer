@@ -98,9 +98,15 @@ Variations:
 Always check whether the fee is on gross or net gains, on beginning or ending assets, and how the hurdle works.
 
 ## Leverage
+Many alternative funds borrow to invest more than their own capital. Borrowing magnifies returns: the fund keeps everything earned on the borrowed money above its interest cost, and bears the losses too.
+
 ```
 Leveraged return = [r × (Equity + Debt) − Interest rate × Debt] / Equity
 ```
+~ r :: the return earned on all the assets (own money plus borrowed)
+~ Equity :: the investors' own capital
+~ Debt :: the amount borrowed
+~ Interest rate :: the cost of the borrowing
 Leverage magnifies both gains and losses.
 
 ## Quick check
@@ -222,6 +228,8 @@ A common valuation shortcut:
 ```
 Value = Net operating income / Capitalization rate
 ```
+~ Net operating income (NOI) :: rental income minus operating expenses, before financing costs and taxes
+~ Capitalization (cap) rate :: the yield buyers require on similar properties (NOI / price)
 NOI $5m at a 6.25% cap rate → value **$80m**. Higher cap rates mean lower values.
 
 ## Infrastructure
@@ -288,9 +296,15 @@ Forms of exposure: **futures** (the main route), commodity ETFs and index funds,
 Commodities produce **no cash flows**, so returns come from price changes. Prices depend on supply and demand, storage costs, inventory levels and the **convenience yield** (the benefit of holding the physical good when supply is tight).
 
 ## Futures returns
+A commodity futures investor doesn't own the physical commodity; they hold futures contracts and the cash backing them. So their return comes from three sources.
+
 ```
 Total return = Spot (price) return + Roll return + Collateral return (+ rebalancing return for an index)
 ```
+~ Spot (price) return :: the change in the commodity's spot price
+~ Roll return :: gain or loss from replacing an expiring contract with a later one (positive in backwardation, negative in contango)
+~ Collateral return :: interest earned on the cash posted to back the futures
+~ Rebalancing return :: for an index, the effect of resetting weights
 - **Contango**: futures prices above spot (upward curve), typical when inventories are ample. Rolling a long position means selling the cheaper expiring contract and buying a dearer one: **negative roll return**.
 - **Backwardation**: futures below spot (downward curve), typical when supplies are tight and the convenience yield is high: **positive roll return** for longs.
 - **Collateral return**: interest earned on the cash backing the futures.

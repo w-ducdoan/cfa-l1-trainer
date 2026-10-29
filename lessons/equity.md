@@ -221,10 +221,15 @@ mins: 20
 | Payment | Cash is paid |
 
 ## Returns
+A shareholder earns in two ways: the share price changes, and the company may pay dividends. The **price return** counts only the first; the **total return** counts both.
+
 ```
 Price return = (P1 − P0) / P0
 Total (holding period) return = (P1 − P0 + D) / P0
 ```
+~ P0 :: the price paid at the start
+~ P1 :: the price at the end (or the sale price)
+~ D :: dividends received during the holding period
 Example: buy at $50, receive $1.50 in dividends, sell at $54.
 - Price return = 4 / 50 = **8.0%**.
 - Total return = (4 + 1.50) / 50 = **11.0%**.
@@ -236,6 +241,9 @@ A share is worth the present value of what you expect to receive: dividends whil
 ```
 P0 = D1/(1 + r) + ... + (Dn + Pn)/(1 + r)^n
 ```
+~ D1 ... Dn :: dividends expected in years 1 to n
+~ Pn :: the price you expect to sell at in year n
+~ r :: the return investors require on the stock
 
 ## Quick check
 ? A stock bought at $40 pays $2 in dividends and is sold at $38. The total return is:
@@ -287,6 +295,11 @@ If you think intrinsic value is above the price, the stock looks undervalued: in
 ```
 EV = Market cap + Debt + Preferred stock + Minority interest − Cash and investments
 ```
+~ EV :: enterprise value
+~ Market cap :: share price × shares outstanding
+~ Debt :: the company's borrowings (market value if available)
+~ Minority interest :: the part of subsidiaries owned by outside shareholders
+~ Cash and investments :: subtracted because a buyer gets them with the company
 Example: market cap $8bn, debt $3bn, cash $1bn. EV = **$10bn**.
 
 EV is less affected by capital structure, so EV-based multiples (EV/EBITDA) compare companies with different leverage better than price-based ones (P/E).
@@ -346,11 +359,23 @@ mins: 35
 Residual income_t = Net income_t − r × Book value_(t−1)
 Value = Book value_0 + PV of future residual income
 ```
+~ Residual income :: profit above the cost of the shareholders' capital used to earn it
+~ Net income_t :: profit in year t
+~ r :: the cost of equity (the return shareholders require)
+~ Book value_(t−1) :: shareholders' equity at the start of year t
+~ Book value_0 :: shareholders' equity today
 
 ## Constant growth (Gordon)
+If a company's dividend grows at a steady rate forever, the present value of all those dividends collapses into one simple formula, the **Gordon growth model**.
+
 ```
 V0 = D1 / (r − g)      where D1 = D0 × (1 + g)
 ```
+~ V0 :: the share's value today
+~ D0 :: the dividend just paid
+~ D1 :: next year's expected dividend
+~ r :: the required return on equity
+~ g :: the constant growth rate of dividends forever (must be below r)
 Needs r > g, and g sustainable forever (not above long-run economic growth).
 
 Example: D0 = $2.00, g = 4%, r = 9%. D1 = 2.08. V0 = 2.08 / 0.05 = **$41.60**.
@@ -378,6 +403,8 @@ Non-callable, non-convertible perpetual preferred:
 ```
 V0 = Dividend / r
 ```
+~ Dividend :: the fixed preferred dividend per year
+~ r :: the return investors require on the preferred shares
 Example: $5 annual dividend, required return 8%: **$62.50**.
 
 With a maturity: PV of dividends + PV of par. Features that help the **issuer** (call) lower value; features that help the **investor** (put, conversion, cumulative dividends) raise it.
@@ -424,6 +451,12 @@ mins: 30
 Justified forward P/E = (D1/E1) / (r − g) = Payout ratio / (r − g)
 Justified P/B = (ROE − g) / (r − g)
 ```
+~ P/E :: price-to-earnings ratio
+~ D1 / E1 :: next year's dividend / next year's earnings = the payout ratio
+~ r :: required return on equity
+~ g :: long-run growth rate
+~ P/B :: price-to-book ratio
+~ ROE :: return on equity
 Example: payout 40%, r = 10%, g = 5%. Justified forward P/E = 0.40 / 0.05 = **8.0×**.
 Example: ROE 15%, g 5%, r 10%. Justified P/B = 0.10 / 0.05 = **2.0×**.
 
@@ -519,6 +552,10 @@ If the company might fail, weight the outcomes:
 ```
 Value = P(going concern) × Going-concern value + P(distress) × Liquidation value
 ```
+~ P(going concern) :: the probability the company survives and keeps operating
+~ Going-concern value :: its value if it survives
+~ P(distress) :: the probability it fails (1 − P(going concern))
+~ Liquidation value :: what shareholders get if it is wound up
 Example: 80% chance it survives with a $50 value, 20% chance of liquidation at $10. Value = 0.8 × 50 + 0.2 × 10 = **$42**.
 
 ## Quick check
@@ -578,6 +615,9 @@ Alternatives: by **business-cycle sensitivity** (cyclical vs. defensive), **stat
 Concentration ratio (N) = combined market share of the N largest firms
 Herfindahl-Hirschman Index (HHI) = sum of squared market shares (in %)
 ```
+~ N :: the number of largest firms counted (often 4 or 8)
+~ Market share :: a firm's sales / total industry sales, in %
+~ HHI :: Herfindahl-Hirschman Index; ranges up to 10,000 for a monopoly
 Example: shares of 40%, 30%, 20% and 10%. HHI = 1,600 + 900 + 400 + 100 = **3,000**. Higher HHI means more concentrated, usually less price competition.
 
 ## Porter's five forces and moats
@@ -650,6 +690,9 @@ Revenue: **top-down** (economy → industry → market share) plus **bottom-up**
 ```
 Degree of operating leverage = %ΔEBIT / %ΔSales = Contribution margin / EBIT
 ```
+~ EBIT :: earnings before interest and taxes (operating profit)
+~ %ΔEBIT, %ΔSales :: percentage changes
+~ Contribution margin :: sales minus variable costs: what's left to cover fixed costs
 Example: sales $1,000, variable costs $600, fixed costs $250. Contribution = 400; EBIT = 150. DOL = 400 / 150 = **2.67**: a 10% rise in sales lifts EBIT about 26.7%.
 
 ## Capital use
@@ -659,6 +702,9 @@ Example: sales $1,000, variable costs $600, fixed costs $250. Contribution = 400
 ```
 ROIC = NOPAT / Invested capital
 ```
+~ ROIC :: return on invested capital
+~ NOPAT :: net operating profit after tax = EBIT × (1 − tax rate)
+~ Invested capital :: the debt and equity tied up in operations
 A company creates value when **ROIC > WACC**.
 
 **Capital structure**: the mix of debt and equity, judged by leverage, coverage and the company's ability to withstand a downturn.
@@ -763,10 +809,18 @@ take: CAPM sets the cost of equity at risk-free rate + beta × market risk premi
 mins: 25
 
 ## CAPM and the market model
+The capital asset pricing model (CAPM) says investors should earn the risk-free rate plus extra return only for market (systematic) risk. Beta measures how much of that risk a stock carries.
+
 ```
 CAPM: E(Ri) = Rf + βi × [E(Rm) − Rf]
 Market model: Ri = αi + βi × Rm + εi
 ```
+~ E(Ri) :: the expected (required) return on stock i
+~ Rf :: the risk-free rate
+~ βi :: beta: how much the stock moves for a 1% market move
+~ E(Rm) − Rf :: the market risk premium (MRP): extra return expected for holding the market
+~ αi :: alpha, the regression intercept
+~ εi :: the error term: stock-specific moves
 Beta measures sensitivity to the market; it's usually estimated by regressing the stock's returns on the market's (the market model). Example: Rf = 4%, β = 1.2, market risk premium (MRP) = 5%. Cost of equity = 4 + 1.2 × 5 = **10.0%**.
 
 ## Estimating beta
@@ -783,6 +837,10 @@ For emerging markets, add a **country risk premium (CRP)** to the MRP:
 CRP = Sovereign yield spread × (σ of the country's equity market / σ of its bond market)
 E(Ri) = Rf + βi × (MRP + CRP)
 ```
+~ CRP :: country risk premium
+~ Sovereign yield spread :: the country's government bond yield minus a developed-market benchmark yield
+~ σ :: standard deviation (volatility)
+~ MRP :: market risk premium
 Example: sovereign spread 3%, equity volatility 30%, bond volatility 20%. CRP = 3% × 1.5 = 4.5%. With Rf 4%, β 1.2, MRP 5%: cost of equity = 4 + 1.2 × 9.5 = **15.4%**.
 
 ## APT and multi-factor models
@@ -790,6 +848,8 @@ Example: sovereign spread 3%, equity volatility 30%, bond volatility 20%. CRP = 
 ```
 E(Ri) = Rf + βi1 × λ1 + βi2 × λ2 + ... + βik × λk
 ```
+~ βi1 ... βik :: the stock's sensitivity to each of k risk factors
+~ λ1 ... λk :: the extra return (risk premium) the market pays for each factor ("lambda")
 λ = the risk premium for each factor; β = the stock's sensitivity to it. Factors aren't specified by the theory.
 
 In practice:

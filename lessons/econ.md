@@ -49,10 +49,15 @@ Long-run ATC (all inputs variable) falls with output under **economies of scale*
 - **Monopoly**: sets MR = MC, charges the price on the demand curve; may **price discriminate**; often regulated.
 
 ## Measuring concentration
+Concentration measures how much of a market the biggest firms control, a quick (if rough) guide to how competitive it is.
+
 ```
 N-firm concentration ratio = sum of the N largest market shares
 HHI = sum of squared market shares (in %)
 ```
+~ N :: how many of the largest firms you count (often 4)
+~ Market share :: a firm's sales / total market sales, in %
+~ HHI :: Herfindahl-Hirschman Index: up to 10,000 for a monopoly; higher means more concentrated
 Shares 40%, 30%, 20%, 10%: four-firm ratio = 100%; HHI = 3,000. **Limitations**: they ignore barriers to entry and potential competitors, and depend on how the market is defined. Econometric estimates of demand elasticity are an alternative.
 
 ## Quick check
@@ -170,9 +175,14 @@ Roles of fiscal policy: **allocation** of resources (public goods), **redistribu
 - Indirect taxes can be changed quickly; capital spending takes time to plan and spend.
 
 ## The multiplier
+When the government spends an extra dollar, the people who receive it spend part of it, and those receivers spend part of that, and so on. The **fiscal multiplier** totals that chain reaction: how much GDP rises per dollar of new spending.
+
 ```
 Fiscal multiplier = 1 / [1 − c(1 − t)]      c = marginal propensity to consume, t = tax rate
 ```
+~ c :: marginal propensity to consume: the share of each extra dollar of income people spend
+~ t :: the tax rate on income
+~ c(1 − t) :: the share of each extra dollar of pre-tax income that gets spent again
 Example: c = 0.8, t = 25%. c(1 − t) = 0.6. Multiplier = 1/0.4 = **2.5**: $10bn of extra spending raises GDP by about $25bn.
 
 **Balanced budget multiplier**: raising spending and taxes by the same amount is still expansionary (spending is fully injected; part of the tax would have been saved).
@@ -230,9 +240,13 @@ Central banks: supply currency, act as banker to the government and to banks, se
 **Transmission**: policy rate → market rates, asset prices, expectations and the exchange rate → spending, investment and net exports → output and inflation. A rate cut lowers borrowing costs, lifts asset prices, and tends to weaken the currency, boosting exports.
 
 ## Neutral rate and stance
+The **neutral** policy rate is the interest rate that neither speeds up nor slows down the economy. Comparing the actual policy rate with it tells you whether policy is easy or tight.
+
 ```
 Neutral rate = Trend real growth + Inflation target
 ```
+~ Trend real growth :: the economy's long-run growth rate after inflation
+~ Inflation target :: the inflation rate the central bank aims for (often 2%)
 Example: trend growth 2%, inflation target 2% → neutral 4%. A policy rate of 5% is **contractionary**; 3% is **expansionary**.
 
 ## Effective central banks
@@ -436,6 +450,8 @@ The real exchange rate adjusts the nominal rate for price levels: it measures **
 ```
 Real rate (domestic per foreign) = Nominal rate × (Foreign price level / Domestic price level)
 ```
+~ Nominal rate :: the quoted exchange rate (domestic currency per unit of foreign currency)
+~ Foreign / Domestic price level :: price indexes in each country (e.g., CPI)
 If foreign prices rise faster than domestic ones with the nominal rate unchanged, foreign goods become relatively more expensive: the real value of the foreign currency rises.
 
 ## Exchange rate regimes
@@ -497,6 +513,10 @@ Example: USD/EUR = 1.1000 and JPY/USD = 150.00.
 ```
 JPY/EUR = JPY/USD × USD/EUR = 150.00 × 1.1000 = 165.00
 ```
+~ JPY/EUR :: yen per euro (the cross-rate you want)
+~ JPY/USD :: yen per dollar
+~ USD/EUR :: dollars per euro
+~ Why it works :: the dollars cancel: (yen / dollar) × (dollars / euro) = yen / euro
 If the common currency doesn't cancel, invert one quote first (USD/JPY = 1/150). Quoted cross-rates that don't match the implied rate create a (rare, brief) arbitrage opportunity.
 
 ## Forward rates and covered interest parity
@@ -504,6 +524,11 @@ Investing in either currency and hedging with a forward must give the same resul
 ```
 F (price/base) = S × (1 + i_price × Days/360) / (1 + i_base × Days/360)
 ```
+~ F :: the forward exchange rate
+~ S :: the spot exchange rate
+~ price / base :: units of the price currency per one unit of the base currency
+~ i_price, i_base :: the interest rates in the price and base currencies
+~ Days / 360 :: the forward's term as a fraction of a 360-day year
 Example: spot USD/EUR 1.1000; 1-year USD rate 5%, EUR rate 3%.
 F = 1.1000 × 1.05/1.03 = **1.1214**.
 

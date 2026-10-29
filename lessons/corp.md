@@ -202,9 +202,14 @@ take: The cash conversion cycle (DOH + DSO − DPO) shows how long cash is tied 
 mins: 25
 
 ## Cash conversion cycle
+The **cash conversion cycle (CCC)** is the number of days between paying suppliers and collecting cash from customers: how long a company's money is tied up in running the business.
+
 ```
 CCC = Days of inventory on hand + Days sales outstanding − Days payables outstanding
 ```
+~ Days of inventory on hand (DOH) :: average days inventory sits before being sold
+~ Days sales outstanding (DSO) :: average days to collect from customers
+~ Days payables outstanding (DPO) :: average days the company takes to pay its suppliers
 | Company | DOH | DSO | DPO | CCC |
 |---|---|---|---|---|
 | A (manufacturer) | 60 | 45 | 40 | **65 days** |
@@ -234,6 +239,9 @@ Levers: collect receivables faster (credit terms, factoring), hold less inventor
 ```
 Cost = (1 + 2/98)^(365/20) − 1 = 44.6% a year
 ```
+~ 2/98 :: the 2% discount you give up, relative to the 98% you'd have paid early
+~ 20 :: the extra days of credit you get by not paying early (30 − 10)
+~ 365/20 :: how many 20-day periods fit in a year
 Skipping the discount is very expensive financing; pay early unless your funding costs more.
 
 ## Quick check
@@ -280,10 +288,17 @@ mins: 35
 Generate ideas → analyze proposals → plan and prioritize → monitor and conduct a **post-audit** (compare actual results to forecasts).
 
 ## NPV and IRR
+Net present value (NPV) answers: after accounting for the time value of money, does this project create more value than it costs? The internal rate of return (IRR) is the project's own break-even rate of return.
+
 ```
 NPV = Σ CFt / (1 + r)^t − Initial investment
 IRR = the r that makes NPV = 0
 ```
+~ NPV :: net present value
+~ CFt :: the cash flow in year t
+~ r :: the cost of capital (the return investors require)
+~ Initial investment :: the cash spent at the start
+~ IRR :: internal rate of return
 Rules: accept if **NPV > 0**, or if **IRR > cost of capital**.
 
 Example: invest $1,000; receive $450 a year for 3 years; cost of capital 10%.
@@ -293,9 +308,14 @@ Example: invest $1,000; receive $450 a year for 3 years; cost of capital 10%.
 When **mutually exclusive** projects rank differently on NPV and IRR (because of scale or timing), choose the **higher NPV**: it measures the value added. IRR assumes reinvestment at the IRR and can have multiple answers when cash flows change sign more than once.
 
 ## ROIC
+Return on invested capital (ROIC) measures how much after-tax operating profit a company earns on the money invested in it; comparing it with the cost of capital shows whether it creates value.
+
 ```
 ROIC = After-tax operating profit / Average invested capital
 ```
+~ ROIC :: return on invested capital
+~ After-tax operating profit :: operating profit (EBIT) × (1 − tax rate)
+~ Average invested capital :: average debt plus equity used in the business over the year
 Value is created when **ROIC > cost of capital**. It's a company-level, accounting-based check, useful but backward-looking.
 
 ## Principles and pitfalls
@@ -354,9 +374,16 @@ take: WACC = wd × rd × (1 − t) + we × re using target weights; Modigliani�
 mins: 35
 
 ## The cost of capital
+A company's cost of capital is the blended return its lenders and shareholders require. The **weighted average cost of capital (WACC)** weights each source by its share of the company's financing.
+
 ```
 WACC = wd × rd × (1 − t) + wp × rp + we × re
 ```
+~ wd, wp, we :: weights of debt, preferred stock and common equity (market values, adding to 1)
+~ rd :: before-tax cost of debt
+~ t :: the marginal tax rate (interest is tax-deductible, so debt costs rd × (1 − t))
+~ rp :: cost of preferred stock
+~ re :: cost of common equity
 Use market-value **target** weights. Interest is tax-deductible, so the cost of debt is after tax.
 
 Example: 60% equity at 11%, 40% debt at 6%, tax 25%.
@@ -388,6 +415,10 @@ Distress costs: **direct** (legal and administrative costs of bankruptcy) and **
 ```
 V_L = V_U + t × D − PV(costs of financial distress)
 ```
+~ V_L :: value of the company with debt (levered)
+~ V_U :: value of the same company with no debt (unlevered)
+~ t × D :: the value of the tax shield from debt (tax rate × debt)
+~ PV(costs of financial distress) :: today's value of expected bankruptcy and distress costs
 The optimal structure is where the marginal tax benefit equals the marginal expected distress cost; that's also where WACC is lowest. Companies set a **target** capital structure and move toward it over time.
 
 **Pecking order theory**: because managers know more than investors, issuing equity signals overvaluation. Companies prefer internal funds, then debt, then (last) equity. **Agency costs**: debt can discipline managers by reducing free cash flow, but too much creates shareholder-creditor conflicts.

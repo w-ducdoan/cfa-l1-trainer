@@ -1,0 +1,43 @@
+"""Acronyms used in the lessons and their full names.
+
+The lesson build uses this to (1) spell each acronym out at its first use in a lesson's prose and
+(2) list the lesson's acronyms in an "Abbreviations" box at the top. Add new acronyms here.
+"""
+GLOSSARY = {
+    'ABS': 'asset-backed securities', 'ADR': 'American depositary receipt', 'AI': 'artificial intelligence', 'AOR': 'add-on rate',
+    'APR': 'annual percentage rate', 'APT': 'arbitrage pricing theory', 'CAL': 'capital allocation line', 'CAPM': 'capital asset pricing model',
+    'CCC': 'cash conversion cycle', 'CD': 'certificate of deposit', 'CDO': 'collateralized debt obligation', 'CDS': 'credit default swap',
+    'CFO': 'cash flow from operating activities', 'CLO': 'collateralized loan obligation', 'CML': 'capital market line', 'CMBS': 'commercial mortgage-backed securities',
+    'CMO': 'collateralized mortgage obligation', 'COGS': 'cost of goods sold', 'CPR': 'conditional prepayment rate', 'CRP': 'country risk premium',
+    'CTA': 'commodity trading advisor', 'CV': 'coefficient of variation', 'DBO': 'defined benefit obligation', 'DCF': 'discounted cash flow',
+    'DDM': 'dividend discount model', 'DLT': 'distributed ledger technology', 'DM': 'discount margin', 'DOH': 'days of inventory on hand',
+    'DOL': 'degree of operating leverage', 'DPO': 'days payables outstanding', 'DR': 'depositary receipt', 'DRC': 'Disciplinary Review Committee',
+    'DSCR': 'debt service coverage ratio', 'DSO': 'days sales outstanding', 'DTA': 'deferred tax asset', 'DTL': 'deferred tax liability',
+    'EBIT': 'earnings before interest and taxes', 'EBITDA': 'earnings before interest, taxes, depreciation and amortization', 'EBT': 'earnings before tax',
+    'EPS': 'earnings per share', 'ESG': 'environmental, social and governance', 'ESMA': 'European Securities and Markets Authority', 'EV': 'enterprise value',
+    'FASB': 'Financial Accounting Standards Board', 'FCF': 'free cash flow', 'FCFE': 'free cash flow to equity', 'FCFF': 'free cash flow to the firm',
+    'FFO': 'funds from operations', 'FIFO': 'first in, first out', 'FRA': 'forward rate agreement', 'FRN': 'floating-rate note',
+    'FVOCI': 'fair value through other comprehensive income', 'GDR': 'global depositary receipt', 'GICS': 'Global Industry Classification Standard', 'GIPS': 'Global Investment Performance Standards',
+    'GO': 'general obligation', 'GP': 'general partner', 'GSE': 'government-sponsored enterprise', 'HHI': 'Herfindahl-Hirschman Index',
+    'HPR': 'holding period return', 'HY': 'high yield', 'IASB': 'International Accounting Standards Board', 'ICB': 'Industry Classification Benchmark',
+    'IG': 'investment grade', 'IMF': 'International Monetary Fund', 'IOSCO': 'International Organization of Securities Commissions', 'IPS': 'investment policy statement',
+    'IRR': 'internal rate of return', 'ITM': 'in the money', 'LBO': 'leveraged buyout', 'LGD': 'loss given default', 'LIFO': 'last in, first out',
+    'LLM': 'large language model', 'LOS': 'learning outcome statement', 'LP': 'limited partner', 'LTV': 'loan-to-value ratio', 'MAD': 'mean absolute deviation',
+    'MBI': 'management buy-in', 'MBO': 'management buyout', 'MBS': 'mortgage-backed securities', 'MD&A': "management's discussion and analysis",
+    'ML': 'machine learning', 'MNPI': 'material nonpublic information', 'MOIC': 'multiple of invested capital', 'MPC': 'marginal propensity to consume',
+    'MRP': 'market risk premium', 'MRR': 'market reference rate', 'MWR': 'money-weighted return', 'NAV': 'net asset value', 'NGO': 'non-governmental organization',
+    'NI': 'net income', 'NLP': 'natural language processing', 'NOI': 'net operating income', 'NOPAT': 'net operating profit after tax', 'NPV': 'net present value',
+    'NRV': 'net realizable value', 'OAS': 'option-adjusted spread', 'OCI': 'other comprehensive income', 'OLS': 'ordinary least squares', 'OTC': 'over-the-counter',
+    'PAC': 'planned amortization class', 'PD': 'probability of default', 'PDF': 'probability density function', 'PE': 'private equity', 'PESTLE': 'political, economic, social, technological, legal and environmental',
+    'PIK': 'payment in kind', 'PIPE': 'private investment in public equity', 'PMF': 'probability mass function', 'PP&E': 'property, plant and equipment',
+    'PPP': 'public-private partnership', 'PSA': 'Public Securities Association prepayment benchmark', 'PV': 'present value', 'FV': 'future value', 'PVBP': 'price value of a basis point',
+    'QM': 'quoted margin', 'RCF': 'retained cash flow', 'REIT': 'real estate investment trust', 'RMBS': 'residential mortgage-backed securities',
+    'ROA': 'return on assets', 'ROE': 'return on equity', 'ROIC': 'return on invested capital', 'ROU': 'right-of-use', 'SEC': 'Securities and Exchange Commission',
+    'SEE': 'standard error of estimate', 'SG&A': 'selling, general and administrative expenses', 'SMM': 'single monthly mortality rate', 'SML': 'security market line',
+    'SOFR': 'Secured Overnight Financing Rate', 'SPAC': 'special purpose acquisition company', 'SPE': 'special purpose entity', 'SSE': 'sum of squared errors',
+    'SSR': 'regression sum of squares', 'SST': 'total sum of squares', 'TIPS': 'Treasury Inflation-Protected Securities', 'TWR': 'time-weighted return',
+    'VaR': 'value at risk', 'VAT': 'value-added tax', 'WACC': 'weighted average cost of capital', 'WIP': 'work in progress', 'WTO': 'World Trade Organization',
+    'YTM': 'yield to maturity', 'IPO': 'initial public offering', 'ETF': 'exchange-traded fund', 'GDP': 'gross domestic product', 'CPI': 'consumer price index',
+    'IFRS': 'International Financial Reporting Standards', 'GAAP': 'generally accepted accounting principles', 'CEO': 'chief executive officer', 'CRO': 'chief risk officer',
+    'FX': 'foreign exchange', 'CBDC': 'central bank digital currency', 'NFT': 'non-fungible token', 'DeFi': 'decentralized finance', 'PoW': 'proof of work', 'PoS': 'proof of stake',
+}

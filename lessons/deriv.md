@@ -210,6 +210,9 @@ mins: 25
 Long asset + short forward = risk-free bond
 Long asset − risk-free bond (borrowing) = long forward
 ```
+~ Long asset :: owning the underlying
+~ Short forward :: agreeing today to sell it later at a fixed price
+~ Risk-free bond :: a position whose payoff is known for certain, so it must earn the risk-free rate
 Because of this, the forward price is pinned to the spot price and the risk-free rate.
 
 ## The forward price
@@ -217,6 +220,10 @@ For an asset with no income or costs:
 ```
 F0(T) = S0 × (1 + r)^T
 ```
+~ F0(T) :: the forward price agreed today for delivery at time T
+~ S0 :: the spot (today's) price of the underlying asset
+~ r :: the risk-free rate per year
+~ T :: time to delivery, in years
 Example: spot 100, risk-free 5%, one year. F0 = **105**.
 
 If the market forward price is 107: sell the forward at 107, borrow 100 at 5%, buy the asset. At maturity deliver the asset for 107 and repay 105: riskless profit **2**. If the forward is below 105, do the reverse (short the asset, lend, buy the forward).
@@ -226,6 +233,8 @@ Owning the underlying can bring **benefits** (dividends, coupons, a **convenienc
 ```
 F0(T) = [S0 − PV(benefits) + PV(costs)] × (1 + r)^T
 ```
+~ PV(benefits) :: today's value of income the asset pays before delivery (dividends, coupons, convenience yield)
+~ PV(costs) :: today's value of costs of holding it (storage, insurance)
 Example: spot 100, PV of dividends 2, r = 5%, one year. F0 = 98 × 1.05 = **102.90**.
 
 Benefits lower the forward price (the buyer of the forward doesn't receive them); costs raise it (the forward buyer avoids paying them).
@@ -274,15 +283,27 @@ At initiation: V0 = 0
 During the life (long): Vt = St − PV(benefits) + PV(costs) − F0(T) / (1 + r)^(T − t)
 At expiration (long): VT = ST − F0(T)
 ```
+~ V0, Vt, VT :: the forward's value at the start, at time t, and at expiration
+~ St :: the spot price at time t
+~ F0(T) :: the forward price agreed at the start
+~ T − t :: the time remaining until delivery
+~ PV(benefits), PV(costs) :: present value of income and carrying costs over the remaining life
 The short's value is the negative of the long's.
 
 Example: F0 = 105 agreed for one year. Six months later the spot is 110 and r = 5%.
 Vt = 110 − 105/1.05^0.5 = 110 − 102.47 = **+7.53** to the long.
 
 ## FX forwards
+A currency forward fixes today the exchange rate for a future swap of currencies. Because you could instead convert now and earn the other currency's interest rate, the forward rate must reflect the gap between the two interest rates.
+
 ```
 F = S × (1 + r_price)^T / (1 + r_base)^T
 ```
+~ F :: the forward exchange rate
+~ S :: the spot exchange rate (price currency per unit of base currency)
+~ r_price :: interest rate on the price currency
+~ r_base :: interest rate on the base currency
+~ T :: time to delivery, in years
 The currency with the higher interest rate trades at a forward discount, so investors can't earn the rate difference without risk.
 
 ## Interest rate forwards
@@ -293,6 +314,10 @@ A "3×6 FRA" covers the 3-month period starting in 3 months. The **long** FRA (f
 Payment at the end of the period = Notional × (MRR − FRA rate) × Days / 360
 Settled at the start of the period = that amount / (1 + MRR × Days / 360)
 ```
+~ Notional :: the loan amount the FRA is based on (it isn't exchanged)
+~ MRR :: market reference rate (e.g., SOFR) set at the start of the period
+~ FRA rate :: the fixed rate agreed in the FRA (forward rate agreement)
+~ Days / 360 :: the period's length in a 360-day year
 Example: notional $10m, FRA rate 4%, MRR at settlement 4.5%, 90 days.
 End-of-period amount = 10m × 0.005 × 90/360 = $12,500. Settled at the start: 12,500/1.01125 = **$12,361** to the long.
 
@@ -397,6 +422,8 @@ The swap rate is the fixed rate that makes the PV of fixed payments equal the PV
 ```
 Swap rate = (1 − DF_N) / (DF_1 + DF_2 + ... + DF_N)
 ```
+~ DF_1 ... DF_N :: discount factors: the price today of $1 received at each payment date (1/(1 + zero rate)^t)
+~ N :: the number of payments
 Example: 1-year zero rate 4%, 2-year zero rate 4.5% (annual payments).
 DF1 = 1/1.04 = 0.9615; DF2 = 1/1.045² = 0.9157.
 Swap rate = (1 − 0.9157)/(0.9615 + 0.9157) = 0.0843/1.8772 = **4.49%**.
@@ -408,6 +435,9 @@ The swap's **price** (fixed rate) stays the same; its **value** changes with rat
 ```
 Value to the pay-fixed side ≈ (Current swap rate − Original fixed rate) × Notional × Σ remaining DF
 ```
+~ Current swap rate :: the fixed rate a new swap with the same remaining life would carry today
+~ Original fixed rate :: the fixed rate locked in at the start
+~ Σ remaining DF :: the sum of discount factors for the remaining payment dates
 Example: you pay 3% fixed; the current 2-year swap rate is 4% and the DFs are as above. Value = 0.01 × 1.8772 × notional ≈ **+1.88% of notional**.
 
 ## Quick check
@@ -445,11 +475,16 @@ take: Option value = exercise value + time value; moneyness compares the spot to
 mins: 30
 
 ## Exercise value, moneyness and time value
+An option's price has two parts: what it would be worth if you exercised it right now (its **exercise value**), and the extra paid for the chance it becomes more valuable before expiration (its **time value**).
+
 ```
 Call exercise value = max(0, S − X)
 Put exercise value = max(0, X − S)
 Time value = Option price − Exercise value
 ```
+~ S :: the current price of the underlying
+~ X :: the exercise (strike) price
+~ max(0, …) :: the larger of zero and the expression, since you'd never exercise at a loss
 | | Call | Put |
 |---|---|---|
 | In the money | S > X | S < X |
@@ -465,6 +500,9 @@ Time value comes from the chance the option ends further in the money. It shrink
 Call ≥ max(0, S − X / (1 + r)^T)
 Put ≥ max(0, X / (1 + r)^T − S)
 ```
+~ X / (1 + r)^T :: the present value of the strike price
+~ r :: the risk-free rate
+~ T :: time to expiration, in years
 
 ## Arbitrage and replication
 Forwards can be replicated statically (buy the asset, borrow). Options can't be replicated with a fixed mix because their payoff is non-linear; replication requires a **hedge ratio** that changes as the price moves (the binomial model shows this in one period).
@@ -521,6 +559,10 @@ For European options with the same strike and expiration:
 ```
 S0 + p0 = c0 + X / (1 + r)^T
 ```
+~ S0 :: the stock price today
+~ p0 :: the European put price
+~ c0 :: the European call price (same strike and expiration)
+~ X / (1 + r)^T :: the present value of the strike: a risk-free bond paying X at expiration
 - Left side: **protective put** (stock + put).
 - Right side: **fiduciary call** (call + a risk-free bond paying X).
 Both pay max(ST, X) at expiration, so they must cost the same.
@@ -537,6 +579,8 @@ Synthetic call = S + p − X / (1 + r)^T
 Synthetic put = c − S + X / (1 + r)^T
 Synthetic stock = c − p + X / (1 + r)^T
 ```
+~ + :: buy (go long)
+~ − :: sell (go short), or for the bond, borrow
 A plus sign means buy; a minus sign means sell (or borrow, for the bond).
 
 ## Put–call forward parity
@@ -544,6 +588,8 @@ Replace the stock with a forward plus a bond:
 ```
 F0 / (1 + r)^T + p0 = c0 + X / (1 + r)^T
 ```
+~ F0 :: the forward price on the stock for the same expiration
+~ F0 / (1 + r)^T :: the present value of the forward price
 So **c − p = (F0 − X) / (1 + r)^T**. When the strike equals the forward price, the call and put cost the same.
 
 ## Firm value
@@ -591,16 +637,27 @@ mins: 30
 Today the stock is S0. In one period it becomes S0 × Ru (up) or S0 × Rd (down), with Rd < 1 + r < Ru (otherwise there's an arbitrage). The option pays c_u or c_d.
 
 ## Hedge ratio and riskless portfolio
+The trick behind the binomial model: hold just the right number of shares against one option so the combined position is worth the same whether the price goes up or down. That makes it riskless, so it must earn the risk-free rate, which pins down the option's price.
+
 ```
 Hedge ratio h = (c_u − c_d) / (S_u − S_d)
 ```
+~ h :: the hedge ratio: shares held per option
+~ c_u, c_d :: the option's payoff if the stock goes up / down
+~ S_u, S_d :: the stock price after an up / down move
 Buy h shares and sell one call: the portfolio has the same value in both states, so it must earn the risk-free rate. That pins down the call's price.
 
 ## Risk-neutral valuation
+The same answer comes from pretending investors don't care about risk: find the up-probability that makes the stock earn the risk-free rate, use it to take the option's expected payoff, and discount at the risk-free rate.
+
 ```
 π = (1 + r − Rd) / (Ru − Rd)
 c0 = [π × c_u + (1 − π) × c_d] / (1 + r)
 ```
+~ π :: the risk-neutral probability of an up move ("pi")
+~ r :: the risk-free rate for the period
+~ Ru, Rd :: the stock's gross return in the up / down state (e.g., 1.25 and 0.80)
+~ c0 :: the option's value today
 π isn't the real probability of an up move; it's the probability that makes the stock earn the risk-free rate. Because the option is priced by replication, investors' risk preferences and the real probabilities don't matter: this is **risk neutrality**.
 
 ## Worked example

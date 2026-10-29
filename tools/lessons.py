@@ -115,6 +115,49 @@ def parse_checks(lines):
     return checks
 
 
+from glossary import GLOSSARY
+
+
+def acro_re(a):
+    return re.compile(r'(?<![A-Za-z0-9&])' + re.escape(a) + r'(?![A-Za-z0-9&])')
+
+
+def spell_out(take, sections):
+    """Write each acronym out in full at its first use in the lesson's prose, unless the lesson already
+    spells it out somewhere, and return the sorted list of acronyms the lesson uses (for the Abbreviations box).
+    Prose means the takeaway and ordinary paragraph, list and callout lines: formulas, keys, tables,
+    term lists and the quick check are left as written."""
+    teach = [ls for t, ls in sections if t.lower() != 'quick check']
+    alltext = take + '\n' + '\n'.join(l for ls in teach for l in ls) + '\n' + ' '.join(t for t, _ in sections)
+    used = sorted((a for a in GLOSSARY if acro_re(a).search(alltext)), key=str.lower)
+    pending = list(used)
+    seen = ['']  # prose already processed, so an acronym spelled out earlier isn't expanded again
+    def expand(line):
+        for a in list(pending):
+            if GLOSSARY[a].lower() in seen[0]:
+                pending.remove(a); continue
+            for m in acro_re(a).finditer(line):
+                before = line[:m.start()]
+                # an expansion inside existing brackets or next to a slash ("EV/EBITDA") reads badly:
+                # leave it and expand at the next plain use instead
+                if before.count('(') > before.count(')') or before.endswith('/') or line[m.end():m.end() + 1] == '/':
+                    continue
+                line = before + f'{GLOSSARY[a]} ({a})' + line[m.end():]
+                pending.remove(a)
+                break
+        seen[0] += ' ' + line.lower()
+        return line
+    take = expand(take)
+    for ls in teach:
+        fence = False
+        for k, ln in enumerate(ls):
+            s = ln.strip()
+            if s.startswith('```'): fence = not fence; continue
+            if fence or not s or s.startswith(('|', '~ ')) or ' :: ' in s: continue
+            ls[k] = expand(ln)
+    return take, used
+
+
 def parse(text):
     lessons = {}
     for chunk in re.split(r'(?m)^# ', text)[1:]:
@@ -126,7 +169,11 @@ def parse(text):
             if cur is None and ln.startswith('mins:'): mins = int(ln[5:].strip()); continue
             if ln.startswith('## '): cur = [ln[3:].strip(), []]; sections.append(cur); continue
             if cur is not None: cur[1].append(ln)
+        take, used = spell_out(take, sections)
         body, checks = '', []
+        if used:
+            body += ('<details class="abbr"><summary>Abbreviations in this lesson (' + str(len(used)) + ')</summary><dl>'
+                     + ''.join(f'<dt>{html.escape(a)}</dt><dd>{html.escape(GLOSSARY[a])}</dd>' for a in used) + '</dl></details>')
         for title, ls in sections:
             if title.lower() == 'quick check': checks = parse_checks(ls)
             else: body += f'<h3 class="sh">{inline(title)}</h3>' + render_blocks(ls)

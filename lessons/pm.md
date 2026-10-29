@@ -21,6 +21,10 @@ Over long periods, small-cap and large-cap stocks earned the most, then long-ter
 ```
 U = E(R) − ½ × A × σ²   (returns as decimals)
 ```
+~ U :: utility: how much the investor likes the portfolio
+~ E(R) :: expected return
+~ σ² :: variance of returns
+~ A :: risk aversion (above 0 for risk-averse investors)
 **Indifference curves** join portfolios with equal utility; they're steeper for more risk-averse investors.
 
 ## Diversification
@@ -30,6 +34,10 @@ With many equally weighted assets with the same variance σ² and average covari
 ```
 σp² = σ²/N + [(N − 1)/N] × Average covariance
 ```
+~ σp² :: portfolio variance
+~ σ² :: the variance of each individual asset (assumed equal)
+~ N :: the number of assets, held in equal weights
+~ Average covariance :: the average covariance between pairs of assets
 As N grows, the first term vanishes: risk falls toward the **average covariance**, which can't be diversified away.
 
 Example: σ = 30%, correlation 0.2 (covariance 0.018). With 20 assets: σp² = 0.09/20 + (19/20) × 0.018 = 0.0216 → σp = **14.7%**. The floor is √0.018 = 13.4%.
@@ -43,6 +51,11 @@ Optimal weight in the risky portfolio:
 ```
 y* = [E(Rp) − Rf] / (A × σp²)
 ```
+~ y* :: the optimal share of money in the risky portfolio (the rest goes in the risk-free asset)
+~ E(Rp) :: the risky portfolio's expected return
+~ Rf :: the risk-free rate
+~ A :: risk aversion
+~ σp² :: the risky portfolio's variance
 Example: Rf = 3%, E(Rp) = 11%, σp = 20%, A = 4. y* = 0.08/(4 × 0.04) = **0.5**: 50% risky, 50% risk-free. A less risk-averse investor (A = 1.5) would put 133% in the risky portfolio, borrowing the rest.
 
 ## Quick check
@@ -84,6 +97,10 @@ With identical expectations, everyone's optimal risky portfolio is the **market 
 ```
 CML: E(Rp) = Rf + [(E(Rm) − Rf) / σm] × σp
 ```
+~ CML :: capital market line
+~ E(Rp), σp :: the expected return and standard deviation of a portfolio on the line
+~ E(Rm), σm :: the market portfolio's expected return and standard deviation
+~ Rf :: the risk-free rate
 Points left of M lend (part risk-free); points right of M borrow to buy more of M. If the borrowing rate exceeds the lending rate, the line bends down beyond M.
 
 ## Systematic vs. nonsystematic risk
@@ -95,12 +112,25 @@ Ri = αi + βi × Rm + ei
 Total variance = βi² × σm² + σe²
 β = Cov(Ri, Rm) / σm² = ρ × σi / σm
 ```
+~ Ri, Rm :: the stock's and the market's returns
+~ αi :: alpha (the intercept)
+~ βi :: beta: the stock's sensitivity to the market
+~ ei :: the stock-specific part of the return
+~ σe² :: the variance of the stock-specific part (nonsystematic risk)
+~ Cov(Ri, Rm) :: covariance of the stock with the market
+~ ρ :: correlation between the stock and the market
 Example: correlation 0.6, σi = 30%, σm = 15%. β = 0.6 × 30/15 = **1.2**.
 
 ## CAPM and the SML
+The capital asset pricing model (CAPM) prices every asset by its systematic risk alone: the risk-free rate plus beta times the market risk premium.
+
 ```
 E(Ri) = Rf + βi × [E(Rm) − Rf]
 ```
+~ E(Ri) :: the expected (required) return on asset i
+~ Rf :: the risk-free rate
+~ βi :: the asset's beta
+~ E(Rm) − Rf :: the market risk premium
 Assumptions: risk-averse investors maximizing utility over one period, frictionless markets (no taxes or costs), homogeneous expectations, divisible assets, price-taking investors.
 
 The **security market line** plots expected return against beta and applies to every asset, efficient or not. A security plotting **above** the SML offers more return than its risk requires: **undervalued**. Below: overvalued.

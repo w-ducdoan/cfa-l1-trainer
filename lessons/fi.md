@@ -112,6 +112,10 @@ A sinking fund cuts credit risk for investors but creates reinvestment risk if b
 Conversion price = Par / Conversion ratio
 Conversion value = Share price × Conversion ratio
 ```
+~ Par :: the bond's face value, repaid at maturity
+~ Conversion ratio :: the number of shares received for each bond
+~ Conversion price :: the effective price paid per share by converting
+~ Conversion value :: what the shares received are worth today
 Example: $1,000 par, conversion ratio 25. Conversion price = $40. With the stock at $36, conversion value = $900.
 - **Contingent convertibles (CoCos)**: bank bonds that convert or are written down automatically if capital falls below a trigger; the holder has no choice.
 
@@ -237,6 +241,10 @@ A repo is a sale of a security with an agreement to buy it back at a higher pric
 Cash lent = Collateral value × (1 − Haircut)
 Repo interest = Cash lent × Repo rate × Days / 360
 ```
+~ Collateral value :: market value of the securities handed over
+~ Haircut :: the discount the lender applies to the collateral (its cushion against a price fall)
+~ Repo rate :: the annual interest rate on the repo
+~ Days / 360 :: the length of the loan as a fraction of a 360-day money market year
 Example: borrow against $10m of bonds with a 2% haircut, 30 days at a 5% repo rate. Cash = $9.8m. Interest = 9.8m × 0.05 × 30/360 = $40,833.
 
 **Repo rate drivers**: lower for high-quality, liquid collateral, short terms, scarce ("special") collateral the lender wants, and when collateral is delivered to the lender. Higher haircuts for riskier, less liquid collateral and longer terms.
@@ -348,9 +356,15 @@ take: A bond's price is the present value of its cash flows at the yield; betwee
 mins: 30
 
 ## Pricing with one yield
+A bond's price is the present value of everything it will pay you: each coupon, plus the face value at the end, each discounted back to today at the bond's yield.
+
 ```
 Price = C/(1 + r) + C/(1 + r)^2 + ... + (C + Par)/(1 + r)^N
 ```
+~ C :: the coupon payment each period (coupon rate × par)
+~ Par :: the face value repaid at maturity
+~ r :: the yield-to-maturity per period (the market discount rate)
+~ N :: the number of periods until maturity
 Example: 5-year, 4% annual coupon, YTM 5%.
 - Annuity factor at 5% for 5 years = (1 − 1.05^−5)/0.05 = 4.3295.
 - PV of coupons = 4 × 4.3295 = 17.318.
@@ -358,11 +372,18 @@ Example: 5-year, 4% annual coupon, YTM 5%.
 - **Price = 95.67** (a discount, since the coupon is below the yield).
 
 ## Between coupon dates
+Bonds are usually bought between coupon dates. The buyer pays the seller the bond's value plus the share of the next coupon the seller has already earned, called **accrued interest**. Quotes leave the accrued interest out so prices don't jump on coupon dates.
+
 ```
 Full price = PV at the last coupon date × (1 + r)^(t/T)
 Accrued interest = (t/T) × Coupon
 Flat (quoted, clean) price = Full price − Accrued interest
 ```
+~ Full price :: the price actually paid (also called the dirty or invoice price)
+~ PV at the last coupon date :: the bond's value calculated as of the most recent coupon date
+~ t :: days since the last coupon date
+~ T :: days in the whole coupon period
+~ Flat price :: the quoted price, without accrued interest (also called the clean price)
 t = days since the last coupon; T = days in the period. Day counts: **actual/actual** for most government bonds, **30/360** for many corporates.
 
 Example: 6% annual coupon, 3 years left at the last coupon, YTM 5%, 20% of the period gone (t/T = 0.2).
@@ -426,6 +447,9 @@ A stated annual rate depends on how often it compounds. To compare, convert:
 ```
 (1 + APR_m / m)^m = (1 + APR_n / n)^n
 ```
+~ APR :: annual percentage rate: the stated yearly rate before compounding
+~ m, n :: how many times a year each rate compounds (2 = semiannual, 4 = quarterly, 12 = monthly)
+~ APR_m / m :: the rate per compounding period
 Example: 6% compounded semiannually.
 - Effective annual rate = 1.03^2 − 1 = **6.09%**.
 - Equivalent quarterly-compounded rate = 4 × (1.03^0.5 − 1) = **5.96%**.
@@ -506,6 +530,12 @@ Two quoting conventions:
 Discount rate (DR):  PV = FV × (1 − Days/Year × DR)
 Add-on rate (AOR):   PV = FV / (1 + Days/Year × AOR)
 ```
+~ PV :: the price paid today
+~ FV :: the face value paid at maturity
+~ Days :: days until maturity
+~ Year :: the day-count year: 360 for most money markets, 365 for some
+~ DR :: discount rate, quoted as a percentage of face value
+~ AOR :: add-on rate, quoted as interest added to the amount invested
 - Discount basis: US Treasury bills, commercial paper (it understates the true return: it uses FV in the denominator).
 - Add-on basis: bank deposits, CDs, repos, SOFR-based instruments.
 - Year: **360** for most money markets (some use 365, e.g. GBP).
@@ -558,6 +588,9 @@ A **spot rate** is the yield on a default-free zero-coupon bond for one maturity
 ```
 Price = C/(1 + S1) + C/(1 + S2)^2 + ... + (C + Par)/(1 + SN)^N
 ```
+~ S1, S2 ... SN :: the spot rate for each maturity: the yield on a zero-coupon government bond maturing at that date
+~ C :: the coupon each period
+~ Par :: the face value repaid at maturity
 Example: S1 = 3%, S2 = 4%. A 2-year, 5% annual coupon bond:
 5/1.03 + 105/1.04^2 = 4.854 + 97.078 = **101.93**.
 
@@ -573,12 +606,17 @@ A forward rate is the rate agreed today for a loan starting later. "1y1y" = a 1-
 (1 + S2)^2 = (1 + S1) × (1 + 1y1y)
 (1 + S3)^3 = (1 + S2)^2 × (1 + 2y1y)
 ```
+~ S1, S2, S3 :: the 1-, 2- and 3-year spot rates
+~ 1y1y :: the 1-year rate starting 1 year from now (a forward rate)
+~ 2y1y :: the 1-year rate starting 2 years from now
 Example: 1y1y = 1.04^2 / 1.03 − 1 = 1.0816/1.03 − 1 = **5.01%**.
 
 Read it as a breakeven: investing for 2 years at 4% gives the same result as 1 year at 3% then rolling at 5.01%. Spot rates are geometric averages of the forwards, so you can go the other way:
 ```
 S_N = [(1 + S1)(1 + 1y1y)(1 + 2y1y)...]^(1/N) − 1
 ```
+~ S_N :: the N-year spot rate
+~ ^(1/N) :: the N-th root: turns the total growth back into a yearly rate (a geometric average)
 Pricing with forwards gives the same price as pricing with spots.
 
 ## How the three curves relate
@@ -644,6 +682,8 @@ Buy a 5-year, 5% annual coupon bond at par (YTM 5%). Immediately after, rates ri
 ```
 Duration gap = Macaulay duration − Investment horizon
 ```
+~ Macaulay duration :: the bond's weighted-average time to receive its cash flows, in years
+~ Investment horizon :: how long the investor plans to hold the bond, in years
 Positive gap: you're exposed to rising rates (price risk dominates). Negative gap: you're exposed to falling rates (reinvestment risk dominates).
 
 ## Macaulay duration
@@ -697,24 +737,41 @@ take: Modified duration = Macaulay ÷ (1 + yield per period) gives the % price c
 mins: 30
 
 ## Modified duration
+**Duration** measures how sensitive a bond's price is to a change in its yield. Modified duration turns Macaulay duration (a time measure) into a price-sensitivity measure: the approximate percentage price change for a 1-percentage-point change in yield.
+
 ```
 Modified duration = Macaulay duration / (1 + r)          (r = yield per period)
 %ΔPrice ≈ −Modified duration × ΔYield
 ```
+~ Macaulay duration :: weighted-average time to the bond's cash flows, in periods or years
+~ r :: the yield per period
+~ %ΔPrice :: the percentage change in the bond's price
+~ ΔYield :: the change in yield, as a decimal (+1% = +0.01)
+~ The minus sign :: price and yield move in opposite directions
 For the 5-year 5% par bond: ModDur = 4.546 / 1.05 = **4.33**. A 1% (100 bp) rise in yield cuts the price by about **4.33%**.
 
 **Approximate modified duration**, from prices at yields just above and below:
 ```
 ApproxModDur = (PV− − PV+) / (2 × ΔYield × PV0)
 ```
+~ PV0 :: the bond's price at today's yield
+~ PV− :: the price if the yield falls by ΔYield
+~ PV+ :: the price if the yield rises by ΔYield
+~ ΔYield :: the size of the yield change used, as a decimal
 Use the annual modified duration with annual yield changes: if the yield is per semiannual period, divide the periodic duration by 2.
 
 ## Money duration and PVBP
+Modified duration gives a percentage change. To know how many dollars a position will gain or lose, multiply by the money invested: that's **money duration**. The **price value of a basis point (PVBP)** is the dollar change for a 1 basis point (0.01%) move in yield.
+
 ```
 Money duration = Modified duration × Full price
 ΔPrice ≈ −Money duration × ΔYield
 PVBP = (PV− − PV+) / 2   (for a 1 bp change)  ≈ Money duration × 0.0001
 ```
+~ Full price :: the bond's price including accrued interest (for a position, its market value)
+~ ΔPrice :: the change in price in currency
+~ bp :: basis point: 0.01%, or 0.0001 as a decimal
+~ PVBP :: price value of a basis point
 Example: ModDur 4.33 on a $10m position at par. Money duration = $43.3m. PVBP ≈ $4,330: a 1 bp rise costs about $4,330.
 
 ## Special cases
@@ -772,10 +829,17 @@ Price-yield is curved for option-free bonds. Duration alone **underestimates** p
 ```
 %ΔPrice ≈ −ModDur × ΔYield + ½ × Convexity × (ΔYield)²
 ```
+~ ModDur :: modified duration
+~ Convexity :: a measure of how much the price-yield curve bends
+~ ΔYield :: the change in yield, as a decimal
+~ (ΔYield)² :: the squared yield change; always positive, so convexity always adds for option-free bonds
 Approximation from prices:
 ```
 ApproxConvexity = (PV− + PV+ − 2 × PV0) / ((ΔYield)² × PV0)
 ```
+~ PV0 :: price at today's yield
+~ PV−, PV+ :: prices if the yield falls / rises by ΔYield
+~ ΔYield :: the yield change used, as a decimal
 
 ## Worked example
 Modified duration 7.0, convexity 60.
@@ -792,9 +856,13 @@ Convexity is higher for longer maturities, lower coupons, lower yields, and for 
 **Money convexity** = convexity × full price, used with money duration for currency amounts.
 
 ## Portfolio duration and convexity
+A portfolio's duration is the average of its bonds' durations, with each bond weighted by its share of the portfolio's market value.
+
 ```
 Portfolio duration ≈ Σ (Market value weight × Duration of each bond)
 ```
+~ Market value weight :: the bond's market value / the portfolio's total market value
+~ Σ :: add up across all the bonds
 Same for convexity. Easy and widely used, but it assumes a **parallel shift** in yields; if short and long yields move differently, it misleads. The more precise method (cash-flow yield of the whole portfolio) is harder to use and still assumes parallel moves.
 
 ## Quick check
@@ -838,6 +906,11 @@ EffDur = (PV− − PV+) / (2 × ΔCurve × PV0)
 EffCon = (PV− + PV+ − 2 × PV0) / ((ΔCurve)² × PV0)
 %ΔPrice ≈ −EffDur × ΔCurve + ½ × EffCon × (ΔCurve)²
 ```
+~ EffDur :: effective duration
+~ EffCon :: effective convexity
+~ ΔCurve :: the parallel shift in the benchmark yield curve, as a decimal
+~ PV0 :: price today
+~ PV−, PV+ :: prices from the valuation model if the curve shifts down / up
 These also work better for large shifts. Use full prices.
 
 ## Callable and putable bonds
@@ -918,9 +991,14 @@ Ratings are cheap, comparable signals and drive many investment rules. **Limitat
 - **Issuer**: earnings, leverage, ratings changes, corporate actions.
 
 ## Price impact of a spread change
+When a bond's credit spread (its extra yield over government bonds) changes, its price moves just as it would for any yield change. **Spread duration** measures that sensitivity.
+
 ```
 %ΔPrice ≈ −Spread duration × ΔSpread + ½ × Spread convexity × (ΔSpread)²
 ```
+~ Spread duration :: the approximate % price change for a 1-percentage-point change in the spread
+~ ΔSpread :: the change in the credit spread, as a decimal
+~ Spread convexity :: the curvature adjustment for larger spread changes
 Example: spread duration 6, spread widens 50 bp → about −3.0% (before convexity).
 
 ## Quick check
@@ -1238,6 +1316,10 @@ Backed by loans on income-producing properties (offices, apartments, malls, hote
 Debt service coverage ratio = Net operating income / Debt service
 LTV = Loan / Appraised property value
 ```
+~ Net operating income (NOI) :: the property's rental income minus operating costs (before debt payments)
+~ Debt service :: the yearly loan payments, interest plus principal
+~ LTV :: loan-to-value ratio
+~ Appraised property value :: the property's estimated market value
 Lower LTV and higher DSCR are better. CMBS loans are usually **non-recourse**.
 
 **Call protection** (limits on prepayment): prepayment lockout, **defeasance** (borrower buys government bonds to replicate the remaining payments), prepayment penalty points, and **yield maintenance** charges. **Balloon risk**: loans often have large balloon payments; if the borrower can't refinance at maturity, the loan extends (a form of extension risk).
